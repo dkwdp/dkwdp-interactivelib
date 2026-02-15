@@ -1,28 +1,16 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.js"></script>
-  <script type="module" src="/src/index.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>p5 Library Test</title>
 </head>
 <body>
-  <script>
-    let particle;
+  <div id="sketch-holder"></div>
 
-    function setup() {
-      createCanvas(400, 400);
-      // Instantiate the class from the library
-      particle = new p5.prototype.NeonParticle(this, 200, 200);
-    }
-
-    function draw() {
-      background(20);
-      
-      // Use the custom library function
-      drawNeonRect(50, 50, 100, 100, 'cyan');
-
-      particle.update();
-      particle.show();
-    }
+  <script type="module">
+    import { initP5 } from "./main.js";
+    initP5();
   </script>
 </body>
 </html>

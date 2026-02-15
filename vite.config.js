@@ -4,12 +4,11 @@ export default defineConfig({
   build: {
     lib: {
       entry: './src/index.js',
-      name: 'MyP5Lib',
-      fileName: (format) => `dkwdp-interactivelib.${format}.js`,
-      formats: ['umd', 'es']
+      name: 'dkwdp-interactive', // The global name when using <script> tags
+      fileName: 'dkwdp-interactive'
     },
     rollupOptions: {
-      external: ['p5'],
+      external: ['p5'], // Don't bundle p5 into your library file
       output: {
         globals: { p5: 'p5' }
       }
