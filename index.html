@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.js"></script>
+  <script type="module" src="/src/index.js"></script>
+</head>
+<body>
+  <script>
+    let particle;
+
+    function setup() {
+      createCanvas(400, 400);
+      // Instantiate the class from the library
+      particle = new p5.prototype.NeonParticle(this, 200, 200);
+    }
+
+    function draw() {
+      background(20);
+      
+      // Use the custom library function
+      drawNeonRect(50, 50, 100, 100, 'cyan');
+
+      particle.update();
+      particle.show();
+    }
+  </script>
+</body>
+</html>

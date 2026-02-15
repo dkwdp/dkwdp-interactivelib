@@ -1,0 +1,28 @@
+{
+  "name": "dkwdp-interactivelib",
+  "version": "0.0.1",
+  "description": "Build interactive tutorials using p5js.",
+  "keywords": [
+    "p5js",
+    "tutorial"
+  ],
+  "homepage": "https://github.com/dkwdp/dkwdp-interactivelib#readme",
+  "bugs": {
+    "url": "https://github.com/dkwdp/dkwdp-interactivelib/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dkwdp/dkwdp-interactivelib.git"
+  },
+  "license": "GPL-3.0-or-later",
+  "author": "bruno.schilling@protonmail.ch",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "p5": "^2.2.1",
+    "vite": "^7.3.1"
+  }
+}
