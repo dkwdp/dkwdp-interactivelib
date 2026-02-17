@@ -10,6 +10,7 @@ export class AudioPlayer {
     public onFinished: () => void;
     private lastWidth: number;
     private segmentPositions: number[][];
+    private loaded: boolean = false;
 
     constructor(p: p5, segments: AudioSegment[]) {
         this.p = p;
@@ -19,25 +20,50 @@ export class AudioPlayer {
         this.playing = false;
         this.nextStartTime = 0.0;
         this.onFinished = () => {};
-
         this.lastWidth = p.width;
-        // List of [x, width] pairs for each segment
+        this.segmentPositions = [];
+        
+        // Start loading all segments
+        this.loadAllSegments();
+        console.log(segments[0].duration());
+    }
+
+    private async loadAllSegments() {
+        // Wait for all segments to load
+        await Promise.all(this.segments.map(segment => segment.ensureLoaded()));
+        this.loaded = true;
         this.segmentPositions = this.calcSegmentPositions();
     }
 
-    play() {
+    isLoaded(): boolean {
+        return this.loaded;
+    }
+
+    async play() {
+        if (!this.loaded) {
+            await this.loadAllSegments();
+        }
+        
         if (this.playing) {
             return;
         }
         if (this.currentSegmentIndex >= this.segments.length) {
             this.currentSegmentIndex = 0;
         }
-        this.segments[this.currentSegmentIndex].play(0.0, 1.0, 1.0, this.nextStartTime);
+        
+        // Ensure Tone.js audio context is started
+        await Tone.start();
+        
+        await this.segments[this.currentSegmentIndex].play(this.nextStartTime);
         this.nextStartTime = 0.0;
         this.playing = true;
     }
 
     update() {
+        if (!this.loaded) {
+            return;
+        }
+        
         if (this.lastWidth !== this.p.width) {
             this.segmentPositions = this.calcSegmentPositions();
             this.lastWidth = this.p.width;
@@ -107,7 +133,13 @@ export class AudioPlayer {
 
         this.p.fill(255);
         this.p.noStroke();
-        if (!this.playing) {
+        
+        if (!this.loaded) {
+            // Show loading indicator
+            this.p.textAlign(this.p.CENTER, this.p.CENTER);
+            this.p.fill(255);
+            this.p.text("...", playButtonX, playButtonY);
+        } else if (!this.playing) {
             // Play button (triangle)
             this.p.triangle(
                 playButtonX - 6, playButtonY - 10,
@@ -118,6 +150,10 @@ export class AudioPlayer {
             // Pause button (two rectangles)
             this.p.rect(playButtonX - 8, playButtonY - 10, 6, 20);
             this.p.rect(playButtonX + 2, playButtonY - 10, 6, 20);
+        }
+
+        if (!this.loaded) {
+            return;
         }
 
         // Draw background bar
@@ -165,7 +201,11 @@ export class AudioPlayer {
         }
     }
 
-    handleClick(mx: number, my: number) {
+    async handleClick(mx: number, my: number) {
+        if (!this.loaded) {
+            return;
+        }
+        
         const barHeight = 60;
         const barY = this.p.height - barHeight;
         const playButtonSize = 40;
@@ -175,7 +215,7 @@ export class AudioPlayer {
         // Check if click is on play button
         const d = this.p.dist(mx, my, playButtonX, playButtonY);
         if (d < playButtonSize / 2) {
-            this.togglePlay();
+            await this.togglePlay();
             return;
         }
 
@@ -203,7 +243,7 @@ export class AudioPlayer {
                     const jumpTime = (clickPosInSegment / segmentWidth) * segment.duration();
 
                     if (this.playing) {
-                        segment.play(0.0, 1.0, 1.0, jumpTime);
+                        await segment.play(jumpTime);
                     } else {
                         this.nextStartTime = jumpTime;
                     }
@@ -213,9 +253,9 @@ export class AudioPlayer {
         }
     }
 
-    togglePlay() {
+    async togglePlay() {
         if (!this.playing) {
-            this.play();
+            await this.play();
         } else {
             this.pause();
         }
@@ -224,45 +264,89 @@ export class AudioPlayer {
     pause() {
         this.playing = false;
         this.nextStartTime = this.segments[this.currentSegmentIndex].currentTime();
-        this.segments[this.currentSegmentIndex].file.stop();
+        this.segments[this.currentSegmentIndex].stop();
+    }
+
+    dispose() {
+        this.segments.forEach(segment => segment.dispose());
     }
 }
 
 export class AudioSegment {
-    // public file: p5.SoundFile;
-    public file: any;
-    public isPlaying: boolean;
+    private player: Tone.Player | null = null;
+    public isPlaying: boolean = false;
+    private filename: string;
+    private _duration: number = 0;
+    private startOffset: number = 0;
+    private startTime: number = 0;
+    private onEndCallback: (() => void) | null = null;
+    private loadPromise: Promise<void> | null = null;
 
-    constructor(p: p5, filename: string) {
-        this.file = p.createAudio(filename);
-        this.isPlaying = false;
+    constructor(filename: string) {
+        this.filename = filename;
+        this.loadPromise = this.loadAudio();
+    }
+
+    private async loadAudio(): Promise<void> {
+        this.player = new Tone.Player(this.filename).toDestination();
+        await Tone.loaded();
+        this._duration = this.player.buffer.duration;
+    }
+
+    async ensureLoaded(): Promise<void> {
+        if (this.loadPromise) {
+            await this.loadPromise;
+        }
     }
 
     duration(): number {
-        return this.file.duration();
+        return this._duration;
     }
 
-    play(...args: any[]): void{
-        this.file.play(...args);
-        this.isPlaying = true;
+    async play(startTime: number = 0): Promise<void> {
+        await this.ensureLoaded();
+        
+        if (this.player) {
+            this.startOffset = startTime;
+            this.startTime = Tone.now();
+            this.player.start(0, startTime);
+            this.isPlaying = true;
+            
+            // Set up callback for when playback finishes
+            const remainingTime = this._duration - startTime;
+            setTimeout(() => {
+                this.isPlaying = false;
+                if (this.onEndCallback) {
+                    this.onEndCallback();
+                }
+            }, remainingTime * 1000);
+        }
     }
 
-    then(f: CallableFunction) {
-        // this.file.onended((soundFile: p5.SoundFile) => {
-        this.file.onended((soundFile: any) => {
-            if (Math.abs(this.file.currentTime() - this.file.duration()) < 0.01) {
-                f(soundFile);
-            }
-        });
+    then(f: () => void) {
+        this.onEndCallback = f;
         return this;
     }
 
     stop() {
-        this.file.stop();
-        this.isPlaying = false;
+        if (this.player) {
+            this.player.stop();
+            this.isPlaying = false;
+        }
     }
 
     currentTime(): number {
-        return this.file.time();
+        if (!this.player || !this.isPlaying) {
+            return this.startOffset;
+        }
+        
+        const elapsed = Tone.now() - this.startTime;
+        return this.startOffset + elapsed;
+    }
+
+    dispose() {
+        if (this.player) {
+            this.player.dispose();
+        }
     }
 }

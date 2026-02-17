@@ -1,6 +1,13 @@
+import p5 from "p5";
+
 // A standalone class that requires a p5 instance
 export class Shield {
-  constructor(p, x, y, radius) {
+  private p: p5;
+  public pos: p5.Vector;
+  public r: number;
+  public angle: number;
+
+  constructor(p: p5, x: number, y: number, radius: number) {
     this.p = p; // Store the p5 instance
     this.pos = p.createVector(x, y);
     this.r = radius;
@@ -20,7 +27,7 @@ export class Shield {
 }
 
 // A standalone utility function
-export function drawGrid(p, spacing) {
+export function drawGrid(p: p5, spacing: number) {
   p.stroke(200, 50);
   for (let x = 0; x < p.width; x += spacing) {
     p.line(x, 0, x, p.height);

@@ -1,17 +1,24 @@
 import { defineConfig } from 'vite';
+import dts from 'vite-plugin-dts';
+import { resolve } from 'path';
 
 export default defineConfig({
   build: {
     lib: {
-      entry: './src/index.js',
-      name: 'dkwdp-interactive', // The global name when using <script> tags
-      fileName: 'dkwdp-interactive'
+      entry: resolve(__dirname, 'src/index.ts'),
+      name: 'DkwdpInteractive',
+      fileName: 'dkwdp-interactivelib',
+      formats: ['es', 'umd']
     },
     rollupOptions: {
-      external: ['p5'], // Don't bundle p5 into your library file
+      external: ['p5', 'p5.sound'],
       output: {
-        globals: { p5: 'p5' }
+        globals: { 
+          p5: 'p5',
+          'p5.sound': 'p5.sound'
+        }
       }
     }
-  }
+  },
+  plugins: [dts({ insertTypesEntry: true })]
 });
