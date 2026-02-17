@@ -1,4 +1,5 @@
 import p5 from "p5";
+export * from './audio-player';
 
 // A standalone class that requires a p5 instance
 export class Shield {

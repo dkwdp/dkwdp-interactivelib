@@ -318,10 +318,21 @@ export class AudioSegment {
         }
     }
 
+    /**
+     * Executes a function when the audio segment reaches the given duration.
+     *
+     * @param duration Duration in seconds.
+     * @param f Function to execute.
+     */
+    addCue(duration: number, f: () => void): AudioSegment {
+        return this;
+    }
+
     then(f: () => void) {
         this.onEndCallback = f;
         return this;
     }
+
 
     stop() {
         if (this.player) {

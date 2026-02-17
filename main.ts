@@ -1,5 +1,5 @@
 import p5 from 'p5';
-import { AudioPlayer, AudioSegment } from './src/audio-player';
+import { AudioPlayer, AudioSegment } from './src';
 import { Shield, drawGrid } from './src';
 
 export function initP5() {
@@ -11,7 +11,11 @@ export function initP5() {
       p.createCanvas(width, height).parent('sketch-holder');
       // Pass the 'p' instance to the library class
       myShield = new Shield(p, 200, 200, 50);
-      audioPlayer = new AudioPlayer(p, [new AudioSegment('assets/01_intro.mp3')]);
+      audioPlayer = new AudioPlayer(p, [
+          new AudioSegment('assets/01_intro.mp3')
+              .addCue(1, () => console.log('after 1 sec'))
+              .then(() => console.log('played intro')),
+      ]);
     };
 
     p.draw = () => {
@@ -30,7 +34,7 @@ export function initP5() {
     }
 
     p.mouseClicked = () => {
-      audioPlayer.handleClick(p.mouseX, p.mouseY).then(r => console.log('yes'));
+      audioPlayer.handleClick(p.mouseX, p.mouseY).then(_ => console.log('yes'));
     }
   });
 }
