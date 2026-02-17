@@ -25,7 +25,6 @@ export class AudioPlayer {
         
         // Start loading all segments
         this.loadAllSegments();
-        console.log(segments[0].duration());
     }
 
     private async loadAllSegments() {
@@ -33,10 +32,6 @@ export class AudioPlayer {
         await Promise.all(this.segments.map(segment => segment.ensureLoaded()));
         this.loaded = true;
         this.segmentPositions = this.calcSegmentPositions();
-    }
-
-    isLoaded(): boolean {
-        return this.loaded;
     }
 
     async play() {
