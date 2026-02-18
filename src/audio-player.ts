@@ -268,54 +268,49 @@ export class AudioPlayer {
 }
 
 export class AudioSegment {
-    private player: Tone.Player | null = null;
-    public isPlaying: boolean = false;
     private filename: string;
-    private _duration: number = 0;
-    private startOffset: number = 0;
-    private startTime: number = 0;
-    private onEndCallback: (() => void) | null = null;
-    private loadPromise: Promise<void> | null = null;
 
     constructor(filename: string) {
         this.filename = filename;
-        this.loadPromise = this.loadAudio();
     }
 
-    private async loadAudio(): Promise<void> {
-        this.player = new Tone.Player(this.filename).toDestination();
-        await Tone.loaded();
-        this._duration = this.player.buffer.duration;
-    }
-
-    async ensureLoaded(): Promise<void> {
-        if (this.loadPromise) {
-            await this.loadPromise;
-        }
-    }
-
+    /**
+     * Calculates and returns the duration in seconds.
+     *
+     * @return {number} The duration value in seconds.
+     */
     duration(): number {
-        return this._duration;
     }
 
-    async play(startTime: number = 0): Promise<void> {
-        await this.ensureLoaded();
-        
-        if (this.player) {
-            this.startOffset = startTime;
-            this.startTime = Tone.now();
-            this.player.start(0, startTime);
-            this.isPlaying = true;
-            
-            // Set up callback for when playback finishes
-            const remainingTime = this._duration - startTime;
-            setTimeout(() => {
-                this.isPlaying = false;
-                if (this.onEndCallback) {
-                    this.onEndCallback();
-                }
-            }, remainingTime * 1000);
-        }
+    /**
+     * Starts to play the audio segment.
+     */
+    play() {
+    }
+
+    /**
+     * Pauses the audio segment. Another call to play() will resume playback at the same position.
+     */
+    pause() {
+    }
+
+    /**
+     * Stops the audio segment. Another call to play() will restart playback from the beginning.
+     */
+    stop() {
+    }
+
+    /**
+     * Seeks to a specific time within the audio segment.
+     * @param position Position in seconds.
+     */
+    seek(position: number) {
+    }
+
+    /**
+     * Returns the current playback time in seconds.
+     */
+    currentTime(): number {
     }
 
     /**
@@ -328,31 +323,11 @@ export class AudioSegment {
         return this;
     }
 
+    /**
+     * Executes a function when the audio segment finishes playing.
+     *
+     * @param f Function to execute.
+     */
     then(f: () => void) {
-        this.onEndCallback = f;
-        return this;
-    }
-
-
-    stop() {
-        if (this.player) {
-            this.player.stop();
-            this.isPlaying = false;
-        }
-    }
-
-    currentTime(): number {
-        if (!this.player || !this.isPlaying) {
-            return this.startOffset;
-        }
-        
-        const elapsed = Tone.now() - this.startTime;
-        return this.startOffset + elapsed;
-    }
-
-    dispose() {
-        if (this.player) {
-            this.player.dispose();
-        }
     }
 }
