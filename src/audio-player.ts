@@ -29,7 +29,7 @@ export class AudioPlayer {
 
     private async loadAllSegments() {
         // Wait for all segments to load
-        await Promise.all(this.segments.map(segment => segment.ensureLoaded()));
+        await Promise.all(this.segments.map(segment => segment.load()));
         this.loaded = true;
         this.segmentPositions = this.calcSegmentPositions();
     }
@@ -49,7 +49,7 @@ export class AudioPlayer {
         // Ensure Tone.js audio context is started
         await Tone.start();
         
-        await this.segments[this.currentSegmentIndex].play(this.nextStartTime);
+        this.segments[this.currentSegmentIndex].play();
         this.nextStartTime = 0.0;
         this.playing = true;
     }
@@ -58,6 +58,8 @@ export class AudioPlayer {
         if (!this.loaded) {
             return;
         }
+
+        console.log(this.segments[0].currentTime());
         
         if (this.lastWidth !== this.p.width) {
             this.segmentPositions = this.calcSegmentPositions();
@@ -69,7 +71,7 @@ export class AudioPlayer {
         if (this.currentSegmentIndex >= this.segments.length) {
             return;
         }
-        if (!this.segments[this.currentSegmentIndex].isPlaying) {
+        if (!this.segments[this.currentSegmentIndex].isPlaying()) {
             this.currentSegmentIndex++;
             this.playing = false;
             if (this.currentSegmentIndex >= this.segments.length) {
@@ -178,7 +180,7 @@ export class AudioPlayer {
             // Draw current segment progress
             if (i === this.currentSegmentIndex) {
                 let currentTime = this.nextStartTime;
-                if (segment.isPlaying) {
+                if (segment.isPlaying()) {
                     currentTime = segment.currentTime();
                 }
                 const segmentDuration = segment.duration();
@@ -237,11 +239,13 @@ export class AudioPlayer {
                     const clickPosInSegment = mx - segmentX;
                     const jumpTime = (clickPosInSegment / segmentWidth) * segment.duration();
 
+                    /*
                     if (this.playing) {
                         await segment.play(jumpTime);
                     } else {
                         this.nextStartTime = jumpTime;
                     }
+                     */
                     break;
                 }
             }
@@ -259,19 +263,45 @@ export class AudioPlayer {
     pause() {
         this.playing = false;
         this.nextStartTime = this.segments[this.currentSegmentIndex].currentTime();
-        this.segments[this.currentSegmentIndex].stop();
-    }
-
-    dispose() {
-        this.segments.forEach(segment => segment.dispose());
+        this.segments[this.currentSegmentIndex].pause();
     }
 }
 
 export class AudioSegment {
+    private audioCtx: AudioContext;
     private filename: string;
+    private buffer: AudioBuffer | null;
+    private source: AudioBufferSourceNode | null;
+    private playing: boolean = false;
+    private startOffset: number = 0;
+    private globalStartTime: number = 0;
 
-    constructor(filename: string) {
+    constructor(filename: string, audioCtx: AudioContext) {
         this.filename = filename;
+        this.audioCtx = audioCtx;
+        this.buffer = null;
+        this.source = null;
+    }
+
+    isLoaded(): boolean {
+        return this.buffer !== null;
+    }
+
+    /**
+     * Ensures that the audio segment is loaded.
+     */
+    async load() {
+        if (this.isLoaded()) return;
+        const response = await fetch(this.filename);
+        const arrayBuffer = await response.arrayBuffer();
+        this.buffer = await this.audioCtx.decodeAudioData(arrayBuffer);
+    }
+
+    createSource() {
+        this.source = this.audioCtx.createBufferSource();
+        this.source.buffer = this.buffer;
+        this.source.connect(this.audioCtx.destination);
+        this.source.onended = () => { this.stop(); };
     }
 
     /**
@@ -280,24 +310,42 @@ export class AudioSegment {
      * @return {number} The duration value in seconds.
      */
     duration(): number {
+        return this.buffer!.duration;
     }
 
     /**
      * Starts to play the audio segment.
      */
     play() {
+        if (!this.isLoaded() || this.playing) return;
+        this.createSource();
+        this.source!.start(0, this.startOffset);
+        this.playing = true;
+        this.globalStartTime = this.audioCtx.currentTime;
+        console.log("play()");
     }
 
     /**
      * Pauses the audio segment. Another call to play() will resume playback at the same position.
      */
     pause() {
+        if (!this.isLoaded() || !this.playing) return;
+        this.startOffset = this.currentTime();
+        this.source!.stop();
+        this.source = null;
+        this.playing = false;
+        console.log("pause()");
     }
 
     /**
      * Stops the audio segment. Another call to play() will restart playback from the beginning.
      */
     stop() {
+        if (!this.isLoaded() || !this.playing) return;
+        this.source!.stop();
+        this.startOffset = 0;
+        this.playing = false;
+        console.log("stop()");
     }
 
     /**
@@ -305,12 +353,27 @@ export class AudioSegment {
      * @param position Position in seconds.
      */
     seek(position: number) {
+        this.startOffset = position;
+        // TODO: handle playing
     }
 
     /**
      * Returns the current playback time in seconds.
      */
     currentTime(): number {
+        if (!this.isLoaded()) return -1;
+        if (this.playing) {
+            return this.audioCtx.currentTime - this.globalStartTime + this.startOffset;
+        } else {
+            return this.startOffset;
+        }
+    }
+
+    /**
+     * Returns true if the audio segment is currently playing.
+     */
+    isPlaying(): boolean {
+        return this.playing;
     }
 
     /**
@@ -320,6 +383,7 @@ export class AudioSegment {
      * @param f Function to execute.
      */
     addCue(duration: number, f: () => void): AudioSegment {
+        // TODO
         return this;
     }
 
@@ -328,6 +392,8 @@ export class AudioSegment {
      *
      * @param f Function to execute.
      */
-    then(f: () => void) {
+    then(f: () => void): AudioSegment {
+        // TODO
+        return this;
     }
 }

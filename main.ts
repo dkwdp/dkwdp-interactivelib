@@ -3,6 +3,7 @@ import { AudioPlayer, AudioSegment } from './src';
 import { Shield, drawGrid } from './src';
 
 export function initP5() {
+  const audioCtx = new window.AudioContext();
   new p5((p, width = 800, height = 800) => {
     let myShield: Shield;
     let audioPlayer: AudioPlayer;
@@ -12,7 +13,7 @@ export function initP5() {
       // Pass the 'p' instance to the library class
       myShield = new Shield(p, 200, 200, 50);
       audioPlayer = new AudioPlayer(p, [
-          new AudioSegment('assets/01_intro.mp3')
+          new AudioSegment('assets/01_intro.mp3', audioCtx)
               .addCue(1, () => console.log('after 1 sec'))
               .then(() => console.log('played intro')),
       ]);
@@ -34,7 +35,7 @@ export function initP5() {
     }
 
     p.mouseClicked = () => {
-      audioPlayer.handleClick(p.mouseX, p.mouseY).then(_ => console.log('yes'));
+      audioPlayer.handleClick(p.mouseX, p.mouseY).then(_ => {});
     }
   });
 }
