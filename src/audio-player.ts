@@ -1,83 +1,57 @@
 import p5 from 'p5';
-import * as Tone from "tone";
 
 export class AudioPlayer {
     private p: p5;
     private segments: AudioSegment[];
-    private currentSegmentIndex: number;
-    private playing: boolean;
-    private nextStartTime: number;
-    public onFinished: () => void;
+    /* index of next segment to play or current segment being played */
+    private currentSegmentIndex: number = 0;
+    private playing: boolean = false;
+    public onended: () => void = () => {};
     private lastWidth: number;
-    private segmentPositions: number[][];
+    private segmentPositions: number[][] = [];
     private loaded: boolean = false;
 
     constructor(p: p5, segments: AudioSegment[]) {
         this.p = p;
         this.segments = segments;
-        // index of next segment to play or current segment being played
-        this.currentSegmentIndex = 0;
-        this.playing = false;
-        this.nextStartTime = 0.0;
-        this.onFinished = () => {};
         this.lastWidth = p.width;
-        this.segmentPositions = [];
-        
+
         // Start loading all segments
-        this.loadAllSegments();
+        this.loadAllSegments().catch(console.error);
     }
 
     private async loadAllSegments() {
         // Wait for all segments to load
-        await Promise.all(this.segments.map(segment => segment.load()));
+        await Promise.all(this.segments.map(segment => segment.load(this)));
         this.loaded = true;
         this.segmentPositions = this.calcSegmentPositions();
     }
 
-    async play() {
-        if (!this.loaded) {
-            await this.loadAllSegments();
-        }
+    play() {
+        if (!this.loaded || this.playing) return;
         
-        if (this.playing) {
-            return;
-        }
         if (this.currentSegmentIndex >= this.segments.length) {
             this.currentSegmentIndex = 0;
         }
         
-        // Ensure Tone.js audio context is started
-        await Tone.start();
-        
         this.segments[this.currentSegmentIndex].play();
-        this.nextStartTime = 0.0;
         this.playing = true;
     }
 
     update() {
-        if (!this.loaded) {
-            return;
-        }
+        if (!this.loaded) return;
 
-        console.log(this.segments[0].currentTime());
-        
         if (this.lastWidth !== this.p.width) {
             this.segmentPositions = this.calcSegmentPositions();
             this.lastWidth = this.p.width;
         }
-        if (!this.playing) {
-            return;
-        }
-        if (this.currentSegmentIndex >= this.segments.length) {
-            return;
-        }
-        if (!this.segments[this.currentSegmentIndex].isPlaying()) {
-            this.currentSegmentIndex++;
-            this.playing = false;
-            if (this.currentSegmentIndex >= this.segments.length) {
-                this.onFinished();
-            }
-        }
+    }
+
+    currentSegmentEnded() {
+        this.currentSegmentIndex++;
+        this.playing = false;
+        if (this.currentSegmentIndex >= this.segments.length)
+            this.onended();
     }
 
     keyTyped() {
@@ -179,12 +153,7 @@ export class AudioPlayer {
 
             // Draw current segment progress
             if (i === this.currentSegmentIndex) {
-                let currentTime = this.nextStartTime;
-                if (segment.isPlaying()) {
-                    currentTime = segment.currentTime();
-                }
-                const segmentDuration = segment.duration();
-                const progress = currentTime / segmentDuration;
+                const progress = segment.currentTime() / segment.duration();
                 this.p.fill(50, 100, 200);
                 this.p.rect(currentX, progressBarY, segmentWidth * progress, progressBarHeight, 5);
             }
@@ -238,23 +207,17 @@ export class AudioPlayer {
                     const segment = this.segments[i];
                     const clickPosInSegment = mx - segmentX;
                     const jumpTime = (clickPosInSegment / segmentWidth) * segment.duration();
-
-                    /*
-                    if (this.playing) {
-                        await segment.play(jumpTime);
-                    } else {
-                        this.nextStartTime = jumpTime;
-                    }
-                     */
+                    segment.seek(jumpTime);
+                    if (this.playing) segment.play();
                     break;
                 }
             }
         }
     }
 
-    async togglePlay() {
+    togglePlay() {
         if (!this.playing) {
-            await this.play();
+            this.play();
         } else {
             this.pause();
         }
@@ -262,25 +225,25 @@ export class AudioPlayer {
 
     pause() {
         this.playing = false;
-        this.nextStartTime = this.segments[this.currentSegmentIndex].currentTime();
         this.segments[this.currentSegmentIndex].pause();
     }
+
 }
 
 export class AudioSegment {
     private audioCtx: AudioContext;
     private filename: string;
-    private buffer: AudioBuffer | null;
-    private source: AudioBufferSourceNode | null;
+    private audioPlayer: AudioPlayer | null = null;
+    private buffer: AudioBuffer | null = null;
+    private source: AudioBufferSourceNode | null = null;
     private playing: boolean = false;
     private startOffset: number = 0;
     private globalStartTime: number = 0;
+    public onended: () => void = () => {};
 
     constructor(filename: string, audioCtx: AudioContext) {
         this.filename = filename;
         this.audioCtx = audioCtx;
-        this.buffer = null;
-        this.source = null;
     }
 
     isLoaded(): boolean {
@@ -290,7 +253,8 @@ export class AudioSegment {
     /**
      * Ensures that the audio segment is loaded.
      */
-    async load() {
+    async load(audioPlayer: AudioPlayer) {
+        this.audioPlayer = audioPlayer;
         if (this.isLoaded()) return;
         const response = await fetch(this.filename);
         const arrayBuffer = await response.arrayBuffer();
@@ -301,7 +265,18 @@ export class AudioSegment {
         this.source = this.audioCtx.createBufferSource();
         this.source.buffer = this.buffer;
         this.source.connect(this.audioCtx.destination);
-        this.source.onended = () => { this.stop(); };
+        this.source.onended = () => {
+            // check if we reached the end of the audio segment
+            if (this.reachedEnd()) {
+                this.stop();
+                if (this.audioPlayer) this.audioPlayer.currentSegmentEnded();
+                this.onended();
+            }
+        };
+    }
+
+    reachedEnd(): boolean {
+        return Math.abs(this.currentTime() - this.duration()) < 0.01;
     }
 
     /**
@@ -322,7 +297,6 @@ export class AudioSegment {
         this.source!.start(0, this.startOffset);
         this.playing = true;
         this.globalStartTime = this.audioCtx.currentTime;
-        console.log("play()");
     }
 
     /**
@@ -334,7 +308,6 @@ export class AudioSegment {
         this.source!.stop();
         this.source = null;
         this.playing = false;
-        console.log("pause()");
     }
 
     /**
@@ -345,16 +318,15 @@ export class AudioSegment {
         this.source!.stop();
         this.startOffset = 0;
         this.playing = false;
-        console.log("stop()");
     }
 
     /**
-     * Seeks to a specific time within the audio segment.
+     * Seeks to a specific time within the audio segment. Audio is always paused afterwards.
      * @param position Position in seconds.
      */
     seek(position: number) {
+        this.stop();
         this.startOffset = position;
-        // TODO: handle playing
     }
 
     /**
@@ -393,7 +365,7 @@ export class AudioSegment {
      * @param f Function to execute.
      */
     then(f: () => void): AudioSegment {
-        // TODO
+        this.onended = f;
         return this;
     }
 }

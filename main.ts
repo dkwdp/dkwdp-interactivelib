@@ -13,9 +13,12 @@ export function initP5() {
       // Pass the 'p' instance to the library class
       myShield = new Shield(p, 200, 200, 50);
       audioPlayer = new AudioPlayer(p, [
-          new AudioSegment('assets/01_intro.mp3', audioCtx)
-              .addCue(1, () => console.log('after 1 sec'))
-              .then(() => console.log('played intro')),
+        new AudioSegment('assets/01_intro.mp3', audioCtx)
+            .addCue(1, () => console.log('first segment after 1 sec'))
+            .then(() => console.log('first segment played')),
+        new AudioSegment('assets/02_zwei_zahlen.mp3', audioCtx)
+            .addCue(1, () => console.log('second segment after 1 sec'))
+            .then(() => console.log('second segment played')),
       ]);
     };
 
