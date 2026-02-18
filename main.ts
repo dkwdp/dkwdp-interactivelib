@@ -4,7 +4,7 @@ import { Shield, drawGrid } from './src';
 
 export function initP5() {
   const audioCtx = new window.AudioContext();
-  new p5((p, width = 800, height = 800) => {
+  new p5((p, width = 1000, height = 400) => {
     let myShield: Shield;
     let audioPlayer: AudioPlayer;
 

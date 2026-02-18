@@ -181,7 +181,7 @@ export class AudioPlayer {
         // Check if click is on play button
         const d = this.p.dist(mx, my, playButtonX, playButtonY);
         if (d < playButtonSize / 2) {
-            await this.togglePlay();
+            this.togglePlay();
             return;
         }
 
@@ -199,7 +199,7 @@ export class AudioPlayer {
                 const [segmentX, segmentWidth] = this.segmentPositions[i];
                 if (mx >= segmentX && mx <= segmentX + segmentWidth) {
                     // Stop current segment
-                    if (this.playing && this.currentSegmentIndex < this.segments.length) {
+                    if (this.currentSegmentIndex < this.segments.length) {
                         this.segments[this.currentSegmentIndex].stop();
                     }
 
@@ -305,8 +305,10 @@ export class AudioSegment {
     pause() {
         if (!this.isLoaded() || !this.playing) return;
         this.startOffset = this.currentTime();
-        this.source!.stop();
-        this.source = null;
+        if (this.source) {
+            this.source!.stop();
+            this.source = null;
+        }
         this.playing = false;
     }
 
@@ -314,8 +316,9 @@ export class AudioSegment {
      * Stops the audio segment. Another call to play() will restart playback from the beginning.
      */
     stop() {
-        if (!this.isLoaded() || !this.playing) return;
-        this.source!.stop();
+        if (!this.isLoaded()) return;
+        if (this.source)
+            this.source!.stop();
         this.startOffset = 0;
         this.playing = false;
     }
