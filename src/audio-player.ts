@@ -2,7 +2,7 @@ import p5 from 'p5';
 
 export class AudioPlayer {
     private p: p5;
-    private segments: AudioSegment[];
+    private readonly segments: AudioSegment[];
     /* index of next segment to play or current segment being played */
     private currentSegmentIndex: number = 0;
     private playing: boolean = false;
@@ -44,6 +44,13 @@ export class AudioPlayer {
         if (this.lastWidth !== this.p.width) {
             this.segmentPositions = this.calcSegmentPositions();
             this.lastWidth = this.p.width;
+        }
+
+        if (this.playing) {
+            if (this.currentSegmentIndex >= 0 && this.currentSegmentIndex < this.segments.length) {
+                const currentSegment = this.segments[this.currentSegmentIndex];
+                currentSegment.update();
+            }
         }
     }
 
@@ -230,15 +237,27 @@ export class AudioPlayer {
 
 }
 
+export class AudioCue {
+    public time: number;
+    public f: () => void;
+
+    constructor(time: number, f: () => void) {
+        this.time = time;
+        this.f = f;
+    }
+}
+
 export class AudioSegment {
     private audioCtx: AudioContext;
-    private filename: string;
+    private readonly filename: string;
     private audioPlayer: AudioPlayer | null = null;
     private buffer: AudioBuffer | null = null;
     private source: AudioBufferSourceNode | null = null;
     private playing: boolean = false;
     private startOffset: number = 0;
     private globalStartTime: number = 0;
+    public cues: AudioCue[] = [];
+    private nextCueIndex: number = 0;
     public onended: () => void = () => {};
 
     constructor(filename: string, audioCtx: AudioContext) {
@@ -297,6 +316,8 @@ export class AudioSegment {
         this.source!.start(0, this.startOffset);
         this.playing = true;
         this.globalStartTime = this.audioCtx.currentTime;
+
+        this.nextCueIndex = this.cueInsertIndex(this.currentTime());
     }
 
     /**
@@ -330,6 +351,25 @@ export class AudioSegment {
     seek(position: number) {
         this.stop();
         this.startOffset = position;
+        this.nextCueIndex = Math.max(this.cueInsertIndex(position) - 1, 0);
+    }
+
+    /**
+     * Update method gets called every frame, if this is the current segment and audio is playing.
+     * Executes cues.
+     */
+    update() {
+        if (!this.isLoaded()) return;
+
+        const currentTime = this.currentTime();
+
+        while (true) {
+            if (this.nextCueIndex >= this.cues.length) break;
+            let cue = this.cues[this.nextCueIndex];
+            if (currentTime < cue.time) break;
+            cue.f();
+            this.nextCueIndex++;
+        }
     }
 
     /**
@@ -352,14 +392,38 @@ export class AudioSegment {
     }
 
     /**
-     * Executes a function when the audio segment reaches the given duration.
+     * Executes a function when the audio segment reaches the given time.
      *
-     * @param duration Duration in seconds.
+     * @param time Duration in seconds.
      * @param f Function to execute.
      */
-    addCue(duration: number, f: () => void): AudioSegment {
-        // TODO
+    addCue(time: number, f: () => void): AudioSegment {
+        const insertIndex = this.cueInsertIndex(time);
+        this.cues.splice(insertIndex, 0, new AudioCue(time, f));
+
+        if (time < this.currentTime())
+            this.nextCueIndex++;
+
         return this;
+    }
+
+    /**
+     * Returns the index where a new cue should be inserted.
+     * @param targetTime
+     */
+    cueInsertIndex(targetTime: number): number {
+        let low = 0;
+        let high = this.cues.length;
+
+        while (low < high) {
+            const mid = Math.floor((low + high) / 2);
+            if (this.cues[mid].time < targetTime) {
+                low = mid + 1;
+            } else {
+                high = mid;
+            }
+        }
+        return low;
     }
 
     /**
