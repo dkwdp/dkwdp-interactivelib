@@ -9,5 +9,8 @@
     "skipLibCheck": true,
     "outDir": "dist"
   },
-  "include": ["src"]
+  "include": [
+    "src",
+    "node_modules/@types/p5/global.d.ts"
+  ]
 }

@@ -1,44 +1,39 @@
 import p5 from 'p5';
-import { AudioPlayer, AudioSegment } from './src';
-import { Shield, drawGrid } from './src';
+import {ScenePlayer} from "./src/scene-player";
+import {ExampleAnimationScene} from "./src/example-animation-scene";
 
 export function initP5() {
-  const audioCtx = new window.AudioContext();
+
   new p5((p, width = 1000, height = 400) => {
-    let myShield: Shield;
-    let audioPlayer: AudioPlayer;
+    let scenePlayer = new ScenePlayer();
 
     p.setup = () => {
       p.createCanvas(width, height).parent('sketch-holder');
-      // Pass the 'p' instance to the library class
-      myShield = new Shield(p, 200, 200, 50);
-      audioPlayer = new AudioPlayer(p, [
-        new AudioSegment('assets/01_intro.mp3', audioCtx)
-            .addCue(1, () => console.log('first segment after 1 sec'))
-            .then(() => console.log('first segment played')),
-        new AudioSegment('assets/02_zwei_zahlen.mp3', audioCtx)
-            .addCue(1, () => console.log('second segment after 1 sec'))
-            .then(() => console.log('second segment played')),
-      ]);
+
+      scenePlayer.load(
+          p,
+          [["intro", "assets/01_intro.mp3"]],
+          [
+            ["cat", "assets/cat.png"],
+            ["hedgehog", "assets/hedgehog.png"],
+          ]
+      ).then(() => {});
     };
 
     p.draw = () => {
       p.background(30);
 
-      // Pass the 'p' instance to the library function
-      drawGrid(p, 40);
-
-      myShield.display();
-      audioPlayer.update();
-      audioPlayer.draw();
+      scenePlayer.update(p);
     };
 
     p.keyTyped = () => {
-      audioPlayer.keyTyped();
     }
 
     p.mouseClicked = () => {
-      audioPlayer.handleClick(p.mouseX, p.mouseY).then(_ => {});
+      const scene = new ExampleAnimationScene("cat", 0, 0, 2);
+      console.log("play ", scene);
+      scenePlayer.setScene(scene);
+      scenePlayer.play();
     }
   });
 }
