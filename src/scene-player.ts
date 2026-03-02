@@ -94,7 +94,7 @@ export class ScenePlayer {
     }
 
     play() {
-        this.audioCtx.resume().then(() => { console.log("Playback resumed"); });
+        this.audioCtx.resume().catch(() => { console.error("AudioContext could not be resumed."); });
         this.playing = true;
     }
 

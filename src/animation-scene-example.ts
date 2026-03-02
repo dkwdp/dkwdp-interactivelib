@@ -2,7 +2,7 @@ import {AnimationScene} from "./animation-scene";
 import {SceneState} from "./scene-state";
 import {Sprite} from "./sprite";
 
-export class ExampleAnimationScene implements AnimationScene {
+export class AnimationSceneExample implements AnimationScene {
     private readonly _sprite: string;
     private readonly x: number;
     private readonly y: number;

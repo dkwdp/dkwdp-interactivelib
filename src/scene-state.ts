@@ -14,8 +14,8 @@ export class SceneState {
     public sprites: Sprite[];
     public audios: Audio[] = []
 
-    constructor(figures: Sprite[] = [], audios: Audio[]) {
-        this.sprites = figures;
+    constructor(sprites: Sprite[] = [], audios: Audio[]) {
+        this.sprites = sprites;
         this.audios = audios;
     }
 }

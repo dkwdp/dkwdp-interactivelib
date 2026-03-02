@@ -1,6 +1,6 @@
 import p5 from 'p5';
 import {ScenePlayer} from "./src/scene-player";
-import {ExampleAnimationScene} from "./src/example-animation-scene";
+import {AnimationSceneExample} from "./src/animation-scene-example";
 
 export function initP5() {
 
@@ -12,7 +12,9 @@ export function initP5() {
 
       scenePlayer.load(
           p,
-          [["intro", "assets/01_intro.mp3"]],
+          [
+              ["intro", "assets/01_intro.mp3"]
+          ],
           [
             ["cat", "assets/cat.png"],
             ["hedgehog", "assets/hedgehog.png"],
@@ -30,8 +32,7 @@ export function initP5() {
     }
 
     p.mouseClicked = () => {
-      const scene = new ExampleAnimationScene("cat", 0, 0, 2);
-      console.log("play ", scene);
+      const scene = new AnimationSceneExample("cat", 0, 0, 2);
       scenePlayer.setScene(scene);
       scenePlayer.play();
     }
