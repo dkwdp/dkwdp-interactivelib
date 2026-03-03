@@ -12,7 +12,7 @@ export interface Scene {
     update(time: number, renderContext: RenderContext, audioEngine: AudioEngine): Audio[];
 
     /**
-     * Returns the duration of the scene in seconds.
+     * Returns the duration of the scene in seconds. If the duration is not defined or can vary, return -1.
      */
     duration(): number;
 }
