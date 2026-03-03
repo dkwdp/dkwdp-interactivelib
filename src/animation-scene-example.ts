@@ -1,8 +1,8 @@
-import {AnimationScene} from "./animation-scene";
+import {Scene} from "./scene";
 import {Audio} from "./audio";
 import {RenderContext} from "./scene-player";
 
-export class AnimationSceneExample implements AnimationScene {
+export class AnimationSceneExample implements Scene {
     duration(): number {
         return 2.0;
     }

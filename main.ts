@@ -1,6 +1,7 @@
 import p5 from 'p5';
 import {ScenePlayer} from "./src/scene-player";
 import {AnimationSceneExample} from "./src/animation-scene-example";
+import {InteractiveSceneExample} from "./src/interactive-scene-example";
 
 export function initP5() {
 
@@ -27,8 +28,9 @@ export function initP5() {
     }
 
     p.mouseClicked = () => {
-      const scene = new AnimationSceneExample();
-      scenePlayer.setAnimationScene(scene);
+      // const scene = new AnimationSceneExample();
+      const scene = new InteractiveSceneExample();
+      scenePlayer.setScene(scene);
       scenePlayer.play();
     }
   });

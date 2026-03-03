@@ -1,6 +1,6 @@
 import {Audio, AudioFile, AudioPlayer} from "./audio";
 import p5 from "p5";
-import {AnimationScene} from "./animation-scene";
+import {Scene} from "./scene";
 import {worldToScreen} from "./figure";
 import {InteractiveScene} from "./interactive-scene";
 
@@ -113,22 +113,14 @@ export class AudioEngine {
     }
 }
 
-enum PlayerState {
-    LOADING,
-    PLAY_ANIMATION,
-    PLAY_INTERACTIVE,
-}
-
 export class ScenePlayer {
     private readonly audioBuffer: AudioBuffer;
     private readonly spriteBuffer: SpriteBuffer;
     private readonly audioCtx: AudioContext;
     private loaded: boolean = false;
     private initialized: boolean = false;
-    private currentAnimationScene: AnimationScene | null = null;
-    private currentInteractiveScene: InteractiveScene | null = null;
+    private currentScene: Scene | null = null;
     private playing: boolean = false;
-    private state: PlayerState = PlayerState.LOADING;
 
     /* The timepoint when the currentAnimationScene was started in the time system of the audioCtx */
     private currentSceneStartTime: number = 0;
@@ -156,17 +148,8 @@ export class ScenePlayer {
         this.loaded = true;
     }
 
-    setAnimationScene(scene: AnimationScene) {
-        this.currentAnimationScene = scene;
-        this.currentInteractiveScene = null;
-        this.state = PlayerState.PLAY_ANIMATION;
-        this.currentSceneStartTime = this.audioCtx.currentTime;
-    }
-
-    setInteractiveScene(scene: InteractiveScene) {
-        this.currentAnimationScene = null;
-        this.currentInteractiveScene = scene;
-        this.state = PlayerState.PLAY_INTERACTIVE;
+    setScene(scene: Scene) {
+        this.currentScene = scene;
         this.currentSceneStartTime = this.audioCtx.currentTime;
     }
 
@@ -184,31 +167,15 @@ export class ScenePlayer {
     }
 
     update(p: p5) {
-        if (!this.loaded ||  !this.initialized) return;
-
-        if (this.state === PlayerState.PLAY_INTERACTIVE) {
-            this.updateInteractive(p);
-        } else if (this.state === PlayerState.PLAY_ANIMATION) {
-            this.updateAnimation(p);
-        }
-        this.updateAnimation(p);
-    }
-
-    updateInteractive(p: p5) {
-        if (!this.currentInteractiveScene) return;
-
-        this.currentInteractiveScene.update(
-            new RenderContext(p, this.spriteBuffer),
-            new AudioEngine(this.currentAudioPlayers, this.audioBuffer)
-        );
-    }
-
-    updateAnimation(p: p5) {
-        if (!this.currentAnimationScene) return;
+        if (!this.loaded || !this.initialized || !this.currentScene) return;
 
         const globalTime = this.audioCtx.currentTime;
         const currentSceneTime = this.currentTime(globalTime);
-        const audios = this.currentAnimationScene!.update(currentSceneTime, new RenderContext(p, this.spriteBuffer));
+        const audios = this.currentScene!.update(
+            currentSceneTime,
+            new RenderContext(p, this.spriteBuffer),
+            new AudioEngine(this.currentAudioPlayers, this.audioBuffer)
+        );
 
         this.handleAudio(audios, globalTime);
     }
