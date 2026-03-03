@@ -1,5 +1,6 @@
-import {AnimationScene, RenderContext} from "./animation-scene";
+import {AnimationScene} from "./animation-scene";
 import {Audio} from "./audio";
+import {RenderContext} from "./scene-player";
 
 export class AnimationSceneExample implements AnimationScene {
     duration(): number {

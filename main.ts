@@ -12,7 +12,7 @@ export function initP5() {
 
       scenePlayer.load(
           p,
-          ["assets/01_intro.mp3"],
+          ["assets/01_intro.mp3", "assets/meow.mp3"],
           ["assets/cat.png", "assets/hedgehog.png"]
       ).then(() => {});
     };
@@ -28,7 +28,7 @@ export function initP5() {
 
     p.mouseClicked = () => {
       const scene = new AnimationSceneExample();
-      scenePlayer.setScene(scene);
+      scenePlayer.setAnimationScene(scene);
       scenePlayer.play();
     }
   });

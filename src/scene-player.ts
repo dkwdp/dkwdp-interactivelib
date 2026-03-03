@@ -1,6 +1,8 @@
 import {Audio, AudioFile, AudioPlayer} from "./audio";
 import p5 from "p5";
-import {AnimationScene, RenderContext} from "./animation-scene";
+import {AnimationScene} from "./animation-scene";
+import {worldToScreen} from "./figure";
+import {InteractiveScene} from "./interactive-scene";
 
 const MAX_TIME_EPSILON = 0.001;
 
@@ -67,16 +69,68 @@ export class SpriteBuffer {
     }
 }
 
+export class RenderContext {
+    p: p5;
+    spriteBuffer: SpriteBuffer;
+
+    constructor(p: p5, spriteBuffer: SpriteBuffer) {
+        this.p = p;
+        this.spriteBuffer = spriteBuffer;
+    }
+
+    /**
+     * Renders a sprite at the given position.
+     * @param sprite The sprite to render.
+     * @param x The x-coordinate of the sprite's center.
+     * @param y The y-coordinate of the sprite's center.
+     * @param size The size of the sprite.
+     * @param rotation The rotation of the sprite in radians.
+     *
+     * TODO: use coordinate system, use rotation
+     */
+    renderSprite(sprite: string, x: number, y: number, size: number = 1.0, rotation: number = 0) {
+        let image = this.spriteBuffer.get(sprite);
+        let world_xy = worldToScreen(x, y, this.p);
+        this.p.image(image, world_xy[0], world_xy[1], image.width * size, image.height * size);
+    }
+}
+
+export class AudioEngine {
+    private readonly audioPlayers: Map<string, AudioPlayer>;
+    private readonly audioBuffer: AudioBuffer;
+
+    constructor(audioPlayers: Map<string, AudioPlayer>, audioBuffer: AudioBuffer) {
+        this.audioPlayers = audioPlayers;
+        this.audioBuffer = audioBuffer;
+    }
+
+    playAudio(filename: string) {
+        const source = this.audioBuffer.get(filename);
+        if (!source) throw new Error(`Audio file not found: ${filename}`);
+        const player = source.createPlayer();
+        player.play();
+        this.audioPlayers.set(filename, player);
+    }
+}
+
+enum PlayerState {
+    LOADING,
+    PLAY_ANIMATION,
+    PLAY_INTERACTIVE,
+}
+
 export class ScenePlayer {
     private readonly audioBuffer: AudioBuffer;
     private readonly spriteBuffer: SpriteBuffer;
     private readonly audioCtx: AudioContext;
     private loaded: boolean = false;
     private initialized: boolean = false;
-    private currentScene: AnimationScene | null = null;
+    private currentAnimationScene: AnimationScene | null = null;
+    private currentInteractiveScene: InteractiveScene | null = null;
     private playing: boolean = false;
+    private state: PlayerState = PlayerState.LOADING;
 
-    /* The when the currentScene was started in the time system of the audioCtx */
+    /* The timepoint when the currentAnimationScene was started in the time system of the audioCtx */
     private currentSceneStartTime: number = 0;
 
     private currentAudioPlayers: Map<string, AudioPlayer>;
@@ -102,8 +156,17 @@ export class ScenePlayer {
         this.loaded = true;
     }
 
-    setScene(scene: AnimationScene) {
-        this.currentScene = scene;
+    setAnimationScene(scene: AnimationScene) {
+        this.currentAnimationScene = scene;
+        this.currentInteractiveScene = null;
+        this.state = PlayerState.PLAY_ANIMATION;
+        this.currentSceneStartTime = this.audioCtx.currentTime;
+    }
+
+    setInteractiveScene(scene: InteractiveScene) {
+        this.currentAnimationScene = null;
+        this.currentInteractiveScene = scene;
+        this.state = PlayerState.PLAY_INTERACTIVE;
         this.currentSceneStartTime = this.audioCtx.currentTime;
     }
 
@@ -121,11 +184,31 @@ export class ScenePlayer {
     }
 
     update(p: p5) {
-        if (!this.loaded || !this.currentScene || !this.initialized) return;
+        if (!this.loaded ||  !this.initialized) return;
+
+        if (this.state === PlayerState.PLAY_INTERACTIVE) {
+            this.updateInteractive(p);
+        } else if (this.state === PlayerState.PLAY_ANIMATION) {
+            this.updateAnimation(p);
+        }
+        this.updateAnimation(p);
+    }
+
+    updateInteractive(p: p5) {
+        if (!this.currentInteractiveScene) return;
+
+        this.currentInteractiveScene.update(
+            new RenderContext(p, this.spriteBuffer),
+            new AudioEngine(this.currentAudioPlayers, this.audioBuffer)
+        );
+    }
+
+    updateAnimation(p: p5) {
+        if (!this.currentAnimationScene) return;
 
         const globalTime = this.audioCtx.currentTime;
         const currentSceneTime = this.currentTime(globalTime);
-        const audios = this.currentScene.update(currentSceneTime, new RenderContext(p, this.spriteBuffer));
+        const audios = this.currentAnimationScene!.update(currentSceneTime, new RenderContext(p, this.spriteBuffer));
 
         this.handleAudio(audios, globalTime);
     }
@@ -146,10 +229,13 @@ export class ScenePlayer {
                 }
             }
             if (newPlayerNeeded) {
-                const player = this.audioBuffer.get(audio.filename).createPlayer();
-                player.play(audio.time, globalTime);
-                this.currentAudioPlayers.set(audio.filename, player);
-                usedPlayers.set(audio.filename, player);
+                const source = this.audioBuffer.get(audio.filename)
+                if (audio.isValid(source.duration())) {
+                    const player = source.createPlayer();
+                    player.play(audio.time, globalTime);
+                    this.currentAudioPlayers.set(audio.filename, player);
+                    usedPlayers.set(audio.filename, player);
+                }
             }
         }
 
