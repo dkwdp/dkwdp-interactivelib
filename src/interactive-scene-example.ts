@@ -1,12 +1,11 @@
 import {RenderContext, AudioEngine} from "./scene-player";
-import {Scene} from "./scene";
-import {Audio} from "./audio";
+import {Scene, SceneUpdate} from "./scene";
 
 export class InteractiveSceneExample implements Scene {
     private x: number = 1;
     private direction: number = 2;
 
-    update(_time: number, renderContext: RenderContext, audioEngine: AudioEngine): Audio[] {
+    update(_time: number, renderContext: RenderContext, audioEngine: AudioEngine): SceneUpdate {
         if (this.x <= -200) {
             this.direction = 2;
             audioEngine.playAudio("assets/meow.mp3");
@@ -18,7 +17,7 @@ export class InteractiveSceneExample implements Scene {
 
         renderContext.renderSprite("assets/cat.png", this.x, 50, 0.2);
 
-        return [];
+        return SceneUpdate.empty();
     }
 
     duration(): number {

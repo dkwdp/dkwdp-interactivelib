@@ -2,7 +2,6 @@ import {Audio, AudioFile, AudioPlayer} from "./audio";
 import p5 from "p5";
 import {Scene} from "./scene";
 import {worldToScreen} from "./figure";
-import {InteractiveScene} from "./interactive-scene";
 
 const MAX_TIME_EPSILON = 0.001;
 
@@ -114,6 +113,7 @@ export class AudioEngine {
 }
 
 export class ScenePlayer {
+    private readonly sceneBuffer: Map<string, Scene>;
     private readonly audioBuffer: AudioBuffer;
     private readonly spriteBuffer: SpriteBuffer;
     private readonly audioCtx: AudioContext;
@@ -127,7 +127,8 @@ export class ScenePlayer {
 
     private currentAudioPlayers: Map<string, AudioPlayer>;
 
-    constructor() {
+    constructor(sceneBuffer: Map<string, Scene>) {
+        this.sceneBuffer = sceneBuffer;
         this.audioBuffer = new AudioBuffer();
         this.spriteBuffer = new SpriteBuffer();
         this.audioCtx = new window.AudioContext();
@@ -171,13 +172,24 @@ export class ScenePlayer {
 
         const globalTime = this.audioCtx.currentTime;
         const currentSceneTime = this.currentTime(globalTime);
-        const audios = this.currentScene!.update(
+        const update = this.currentScene!.update(
             currentSceneTime,
             new RenderContext(p, this.spriteBuffer),
             new AudioEngine(this.currentAudioPlayers, this.audioBuffer)
         );
 
-        this.handleAudio(audios, globalTime);
+        this.handleAudio(update.audios, globalTime);
+
+        this.handleNextScene(update.nextScene);
+    }
+
+    handleNextScene(nextScene: string | null) {
+        if (nextScene === null) return;
+
+        const scene = this.sceneBuffer.get(nextScene);
+        if (!scene) throw new Error(`Unable to find scene "${nextScene}"`);
+
+        this.setScene(scene);
     }
 
     handleAudio(audios: Audio[], globalTime: number) {

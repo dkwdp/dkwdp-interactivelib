@@ -2,11 +2,16 @@ import p5 from 'p5';
 import {ScenePlayer} from "./src/scene-player";
 import {AnimationSceneExample} from "./src/animation-scene-example";
 import {InteractiveSceneExample} from "./src/interactive-scene-example";
+import {Scene} from "./src/scene";
 
 export function initP5() {
 
   new p5((p, width = 1000, height = 400) => {
-    let scenePlayer = new ScenePlayer();
+    let sceneBuffer = new Map<string, Scene>([
+        ["initScene", new AnimationSceneExample()],
+        ["scene1", new InteractiveSceneExample()],
+    ]);
+    let scenePlayer = new ScenePlayer(sceneBuffer);
 
     p.setup = () => {
       p.createCanvas(width, height).parent('sketch-holder');
@@ -29,8 +34,7 @@ export function initP5() {
 
     p.mouseClicked = () => {
       // const scene = new AnimationSceneExample();
-      const scene = new InteractiveSceneExample();
-      scenePlayer.setScene(scene);
+      scenePlayer.setScene(sceneBuffer.get("initScene")!);
       scenePlayer.play();
     }
   });
