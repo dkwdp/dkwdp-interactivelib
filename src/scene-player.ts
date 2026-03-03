@@ -1,9 +1,11 @@
-import {AudioSegment} from "./audio";
+import {Audio, AudioFile, AudioPlayer} from "./audio";
 import p5 from "p5";
 import {AnimationScene, RenderContext} from "./animation-scene";
 
+const MAX_TIME_EPSILON = 0.001;
+
 export class AudioBuffer {
-    private audios: Map<string, AudioSegment>;
+    private audios: Map<string, AudioFile>;
 
     constructor() {
         this.audios = new Map();
@@ -17,7 +19,7 @@ export class AudioBuffer {
      */
     async load(audios: string[], audioCtx: AudioContext) {
         for (const filename of audios) {
-            const audio = new AudioSegment(filename, audioCtx);
+            const audio = new AudioFile(filename, audioCtx);
             await audio.load();
             this.audios.set(filename, audio);
         }
@@ -28,7 +30,7 @@ export class AudioBuffer {
      * @param audio The name of the audio.
      * @returns The audio
      */
-    get(audio: string): AudioSegment {
+    get(audio: string): AudioFile {
         const result = this.audios.get(audio);
         if (!result)
             throw new Error(`Audio segment not found: ${audio}`);
@@ -70,16 +72,20 @@ export class ScenePlayer {
     private readonly spriteBuffer: SpriteBuffer;
     private readonly audioCtx: AudioContext;
     private loaded: boolean = false;
+    private initialized: boolean = false;
     private currentScene: AnimationScene | null = null;
     private playing: boolean = false;
 
     /* The when the currentScene was started in the time system of the audioCtx */
     private currentSceneStartTime: number = 0;
 
+    private currentAudioPlayers: Map<string, AudioPlayer>;
+
     constructor() {
         this.audioBuffer = new AudioBuffer();
         this.spriteBuffer = new SpriteBuffer();
         this.audioCtx = new window.AudioContext();
+        this.currentAudioPlayers = new Map();
     }
 
     /**
@@ -96,35 +102,57 @@ export class ScenePlayer {
         this.loaded = true;
     }
 
-    isLoaded(): boolean {
-        return this.loaded;
-    }
-
     setScene(scene: AnimationScene) {
         this.currentScene = scene;
         this.currentSceneStartTime = this.audioCtx.currentTime;
     }
 
     play() {
-        this.audioCtx.resume().catch(() => { console.error("AudioContext could not be resumed."); });
+        this.audioCtx.resume().then(() => {this.initialized = true;})
         this.playing = true;
     }
 
     /**
      * Returns the time that the current scene has been playing for in seconds.
      */
-    currentTime(): number {
+    currentTime(globalTime: number): number {
         if (!this.loaded) return -1;
-        return this.audioCtx.currentTime - this.currentSceneStartTime;
+        return globalTime - this.currentSceneStartTime;
     }
 
     update(p: p5) {
-        if (!this.loaded || !this.currentScene) return;
+        if (!this.loaded || !this.currentScene || !this.initialized) return;
 
-        const renderContext = new RenderContext(p, this.spriteBuffer);
-        const currentSceneTime = this.currentTime();
-        const audios = this.currentScene.update(currentSceneTime, renderContext);
+        const globalTime = this.audioCtx.currentTime;
+        const currentSceneTime = this.currentTime(globalTime);
+        const audios = this.currentScene.update(currentSceneTime, new RenderContext(p, this.spriteBuffer));
 
-        // TODO handle audio
+        this.handleAudio(audios, globalTime);
+    }
+
+    handleAudio(audios: Audio[], globalTime: number) {
+        const usedPlayers = new Map<string, AudioPlayer>();
+        for (const audio of audios) {
+            const player = this.currentAudioPlayers.get(audio.filename);
+            let newPlayerNeeded = true;
+            if (player) {
+                // remove player, if too far off
+                if (Math.abs(player.getPosition(globalTime) - audio.time) > MAX_TIME_EPSILON) {
+                    player.stop();
+                    this.currentAudioPlayers.delete(audio.filename);
+                } else {
+                    newPlayerNeeded = false;
+                    usedPlayers.set(audio.filename, player);
+                }
+            }
+            if (newPlayerNeeded) {
+                const player = this.audioBuffer.get(audio.filename).createPlayer();
+                player.play(audio.time, globalTime);
+                this.currentAudioPlayers.set(audio.filename, player);
+                usedPlayers.set(audio.filename, player);
+            }
+        }
+
+        this.currentAudioPlayers = usedPlayers;
     }
 }

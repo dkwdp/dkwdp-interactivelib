@@ -12,17 +12,66 @@ export class Audio {
         this.filename = filename;
         this.time = time;
     }
+
+    isValid(duration: number): boolean {
+        return this.time >= 0 && this.time <= duration;
+    }
 }
 
-export class AudioSegment {
+export class AudioPlayer {
+    private source: AudioBufferSourceNode;
     private audioCtx: AudioContext;
-    private readonly filename: string;
-    private buffer: AudioBuffer | null = null;
-    private source: AudioBufferSourceNode | null = null;
+    readonly duration: number;
     private playing: boolean = false;
     private startOffset: number = 0;
     private globalStartTime: number = 0;
-    public onended: () => void = () => {};
+
+    constructor(source: AudioBufferSourceNode, audioCtx: AudioContext, duration: number) {
+        this.source = source;
+        this.audioCtx = audioCtx;
+        this.duration = duration;
+
+        // We always assume that the audio context is running
+        if (this.audioCtx.state !== "running")
+            throw new Error("Audio context is not running");
+    }
+
+    play(offset: number = 0, globalTime: number = -1) {
+        if (globalTime == -1)
+            globalTime = this.audioCtx.currentTime;
+
+        this.globalStartTime = globalTime;
+        this.startOffset = offset;
+
+        if (this.playing)
+            this.stop();
+
+        this.source.start(0, offset);
+        this.playing = true;
+    }
+
+    /**
+     * Stops the audio segment. Another call to play() will restart playback from the beginning.
+     */
+    stop() {
+        if (this.playing)
+            this.source.stop();
+        this.startOffset = 0;
+        this.playing = false;
+    }
+
+    getPosition(globalTime: number = -1): number {
+        if (globalTime == -1)
+            globalTime = this.audioCtx.currentTime;
+
+        return globalTime - this.globalStartTime + this.startOffset;
+    }
+}
+
+export class AudioFile {
+    private readonly filename: string;
+    private readonly audioCtx: AudioContext;
+    private buffer: AudioBuffer | null = null;
 
     constructor(filename: string, audioCtx: AudioContext) {
         this.filename = filename;
@@ -43,21 +92,12 @@ export class AudioSegment {
         this.buffer = await this.audioCtx.decodeAudioData(arrayBuffer);
     }
 
-    createSource() {
-        this.source = this.audioCtx.createBufferSource();
-        this.source.buffer = this.buffer;
-        this.source.connect(this.audioCtx.destination);
-        this.source.onended = () => {
-            // check if we reached the end of the audio segment
-            if (this.reachedEnd()) {
-                this.stop();
-                this.onended();
-            }
-        };
-    }
-
-    reachedEnd(): boolean {
-        return Math.abs(this.currentTime() - this.duration()) < 0.01;
+    createPlayer(): AudioPlayer {
+        if (!this.isLoaded()) throw new Error("Audio file not loaded");
+        const source = this.audioCtx.createBufferSource();
+        source.buffer = this.buffer;
+        source.connect(this.audioCtx.destination);
+        return new AudioPlayer(source, this.audioCtx, this.duration());
     }
 
     /**
@@ -67,78 +107,5 @@ export class AudioSegment {
      */
     duration(): number {
         return this.buffer!.duration;
-    }
-
-    /**
-     * Starts to play the audio segment.
-     */
-    play() {
-        if (!this.isLoaded() || this.playing) return;
-        this.createSource();
-        this.source!.start(0, this.startOffset);
-        this.playing = true;
-        this.globalStartTime = this.audioCtx.currentTime;
-    }
-
-    /**
-     * Pauses the audio segment. Another call to play() will resume playback at the same position.
-     */
-    pause() {
-        if (!this.isLoaded() || !this.playing) return;
-        this.startOffset = this.currentTime();
-        if (this.source) {
-            this.source!.stop();
-            this.source = null;
-        }
-        this.playing = false;
-    }
-
-    /**
-     * Stops the audio segment. Another call to play() will restart playback from the beginning.
-     */
-    stop() {
-        if (!this.isLoaded()) return;
-        if (this.source)
-            this.source!.stop();
-        this.startOffset = 0;
-        this.playing = false;
-    }
-
-    /**
-     * Seeks to a specific time within the audio segment. Audio is always paused afterwards.
-     * @param position Position in seconds.
-     */
-    seek(position: number) {
-        this.stop();
-        this.startOffset = position;
-    }
-
-    /**
-     * Returns the current playback time in seconds.
-     */
-    currentTime(): number {
-        if (!this.isLoaded()) return -1;
-        if (this.playing) {
-            return this.audioCtx.currentTime - this.globalStartTime + this.startOffset;
-        } else {
-            return this.startOffset;
-        }
-    }
-
-    /**
-     * Returns true if the audio segment is currently playing.
-     */
-    isPlaying(): boolean {
-        return this.playing;
-    }
-
-    /**
-     * Executes a function when the audio segment finishes playing.
-     *
-     * @param f Function to execute.
-     */
-    then(f: () => void): AudioSegment {
-        this.onended = f;
-        return this;
     }
 }

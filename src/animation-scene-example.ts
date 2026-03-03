@@ -15,6 +15,6 @@ export class AnimationSceneExample implements AnimationScene {
 
         renderContext.renderSprite("assets/cat.png", x, y, 0.2);
 
-        return [];
+        return [new Audio("assets/01_intro.mp3", time)];
     }
 }
