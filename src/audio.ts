@@ -1,4 +1,20 @@
 export class Audio {
+    /**
+     * The filename of the audio resource.
+     */
+    filename: string;
+    /**
+     * The current playback position in seconds.
+     */
+    time: number;
+
+    constructor(filename: string, time: number = 0) {
+        this.filename = filename;
+        this.time = time;
+    }
+}
+
+export class AudioSegment {
     private audioCtx: AudioContext;
     private readonly filename: string;
     private buffer: AudioBuffer | null = null;
@@ -121,7 +137,7 @@ export class Audio {
      *
      * @param f Function to execute.
      */
-    then(f: () => void): Audio {
+    then(f: () => void): AudioSegment {
         this.onended = f;
         return this;
     }

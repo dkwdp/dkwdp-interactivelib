@@ -12,13 +12,8 @@ export function initP5() {
 
       scenePlayer.load(
           p,
-          [
-              ["intro", "assets/01_intro.mp3"]
-          ],
-          [
-            ["cat", "assets/cat.png"],
-            ["hedgehog", "assets/hedgehog.png"],
-          ]
+          ["assets/01_intro.mp3"],
+          ["assets/cat.png", "assets/hedgehog.png"]
       ).then(() => {});
     };
 
@@ -32,7 +27,7 @@ export function initP5() {
     }
 
     p.mouseClicked = () => {
-      const scene = new AnimationSceneExample("cat", 0, 0, 2);
+      const scene = new AnimationSceneExample();
       scenePlayer.setScene(scene);
       scenePlayer.play();
     }

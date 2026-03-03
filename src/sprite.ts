@@ -1,5 +1,5 @@
 export class Sprite {
-    spriteId: string;
+    filename: string;
 
     // TODO: change to coordinate system
     x: number;
@@ -10,7 +10,7 @@ export class Sprite {
     rotation: number;
 
     constructor(spriteId: string, x: number, y: number, size: number = 1.0, rotation: number = 0) {
-        this.spriteId = spriteId;
+        this.filename = spriteId;
         this.x = x;
         this.y = y;
         this.size = size;

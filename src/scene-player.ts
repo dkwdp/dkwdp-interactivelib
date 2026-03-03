@@ -1,11 +1,9 @@
-import {Audio} from "./audio";
+import {AudioSegment} from "./audio";
 import p5 from "p5";
-import {AnimationScene} from "./animation-scene";
-import {Figure, worldToScreen} from "./figure";
-import {Sprite} from "./sprite";
+import {AnimationScene, RenderContext} from "./animation-scene";
 
-class AudioBuffer {
-    private audios: Map<string, Audio>;
+export class AudioBuffer {
+    private audios: Map<string, AudioSegment>;
 
     constructor() {
         this.audios = new Map();
@@ -17,11 +15,11 @@ class AudioBuffer {
      * @param audioCtx The AudioContext to use for playback.
      * The filename is the path to the audio file.
      */
-    async load(audios: [string, string][], audioCtx: AudioContext) {
-        for (const [name, filename] of audios) {
-            const audio = new Audio(filename, audioCtx);
+    async load(audios: string[], audioCtx: AudioContext) {
+        for (const filename of audios) {
+            const audio = new AudioSegment(filename, audioCtx);
             await audio.load();
-            this.audios.set(name, audio);
+            this.audios.set(filename, audio);
         }
     }
 
@@ -30,7 +28,7 @@ class AudioBuffer {
      * @param audio The name of the audio.
      * @returns The audio
      */
-    get(audio: string): Audio {
+    get(audio: string): AudioSegment {
         const result = this.audios.get(audio);
         if (!result)
             throw new Error(`Audio segment not found: ${audio}`);
@@ -38,18 +36,24 @@ class AudioBuffer {
     }
 }
 
-class SpriteBuffer {
+export class SpriteBuffer {
     private sprites: Map<string, p5.Image>
 
     constructor() {
         this.sprites = new Map();
     }
 
-    async load(sprites: [string, string][], p: p5) {
-        for (const [name, filename] of sprites) {
+    /**
+     * Loads a set of sprite images and stores them in the sprites map.
+     *
+     * @param sprites - An array of file paths to the sprite images.
+     * @param p - An instance of the p5 library used to load the images.
+     * @return A promise that resolves once all images are loaded and stored.
+     */
+    async load(sprites: string[], p: p5) {
+        for (const filename of sprites) {
             const sprite = await p.loadImage(filename);
-            console.log(name, sprite);
-            this.sprites.set(name, sprite);
+            this.sprites.set(filename, sprite);
         }
     }
 
@@ -78,7 +82,15 @@ export class ScenePlayer {
         this.audioCtx = new window.AudioContext();
     }
 
-    async load(p: p5, audios: [string, string][], sprites: [string, string][]) {
+    /**
+     * Loads audio and sprite resources into buffers and marks the instance as loaded.
+     *
+     * @param p - The p5.js instance used for processing sprite assets.
+     * @param audios - An array of audio file paths to be loaded into the audio buffer.
+     * @param sprites - An array of sprite file paths to be loaded into the sprite buffer.
+     * @return A promise that resolves when all resources are successfully loaded.
+     */
+    async load(p: p5, audios: string[], sprites: string[]) {
         await this.audioBuffer.load(audios, this.audioCtx);
         await this.spriteBuffer.load(sprites, p);
         this.loaded = true;
@@ -109,21 +121,10 @@ export class ScenePlayer {
     update(p: p5) {
         if (!this.loaded || !this.currentScene) return;
 
+        const renderContext = new RenderContext(p, this.spriteBuffer);
         const currentSceneTime = this.currentTime();
-
-        const state = this.currentScene.render(currentSceneTime);
+        const audios = this.currentScene.update(currentSceneTime, renderContext);
 
         // TODO handle audio
-
-        // handle figures
-        for (const sprite of state.sprites) {
-            renderSprite(sprite, this.spriteBuffer, p);
-        }
     }
-}
-
-export function renderSprite(sprite: Sprite, spriteBuffer: SpriteBuffer, p: p5) {
-    let image = spriteBuffer.get(sprite.spriteId);
-    let world_xy = worldToScreen(sprite.x, sprite.y, p);
-    p.image(image, world_xy[0], world_xy[1], image.width * sprite.size, image.height * sprite.size);
 }

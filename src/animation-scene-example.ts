@@ -1,32 +1,20 @@
-import {AnimationScene} from "./animation-scene";
-import {SceneState} from "./scene-state";
-import {Sprite} from "./sprite";
+import {AnimationScene, RenderContext} from "./animation-scene";
+import {Audio} from "./audio";
 
 export class AnimationSceneExample implements AnimationScene {
-    private readonly _sprite: string;
-    private readonly x: number;
-    private readonly y: number;
-    private readonly _duration: number;
-
-    constructor(sprite: string, x: number, y: number, duration: number) {
-        this._sprite = sprite;
-        this.x = x;
-        this.y = y;
-        this._duration = duration;
-    }
-
     duration(): number {
-        return this._duration;
+        return 2.0;
     }
 
-    render(time: number): SceneState {
-        if (time > this._duration) return new SceneState([], []);
+    update(time: number, renderContext: RenderContext): Audio[] {
+        if (time > this.duration()) return [];
 
-        const progress = time / this._duration;
-        const x = this.x + Math.sin(progress * 2 * Math.PI * 2) * 20;
-        const y = this.y + Math.cos(progress * 2 * Math.PI * 2) * 20;
-        const figure: Sprite = new Sprite(this._sprite, x, y, 0.2);
+        const progress = time / this.duration();
+        const x = 50 + Math.sin(progress * 2 * Math.PI * 2) * 20;
+        const y = 50 + Math.cos(progress * 2 * Math.PI * 2) * 20;
 
-        return new SceneState([figure], []);
+        renderContext.renderSprite("assets/cat.png", x, y, 0.2);
+
+        return [];
     }
 }
