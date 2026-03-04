@@ -186,6 +186,8 @@ export class ScenePlayer {
     handleNextScene(nextScene: string | null) {
         if (nextScene === null) return;
 
+        this.resetAudio();
+
         const scene = this.sceneBuffer.get(nextScene);
         if (!scene) throw new Error(`Unable to find scene "${nextScene}"`);
 
@@ -218,6 +220,20 @@ export class ScenePlayer {
             }
         }
 
+        // Stop unused players
+        for (const [filename, player] of this.currentAudioPlayers) {
+            if (!usedPlayers.has(filename)) {
+                player.stop();
+            }
+        }
         this.currentAudioPlayers = usedPlayers;
+    }
+
+    resetAudio() {
+        console.log("resetting audio", this.currentAudioPlayers.size);
+        for (const player of this.currentAudioPlayers.values()) {
+            player.stop();
+        }
+        this.currentAudioPlayers.clear();
     }
 }
