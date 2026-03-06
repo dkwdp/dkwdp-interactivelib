@@ -22,7 +22,7 @@ export class AudioPlayer {
     private source: AudioBufferSourceNode;
     private audioCtx: AudioContext;
     readonly duration: number;
-    private playing: boolean = false;
+    private _playing: boolean = false;
     private startOffset: number = 0;
     private globalStartTime: number = 0;
 
@@ -34,6 +34,15 @@ export class AudioPlayer {
         // We always assume that the audio context is running
         if (this.audioCtx.state !== "running")
             throw new Error("Audio context is not running");
+
+        // stop playing onended
+        this.source.onended = () => {
+            this._playing = false;
+        };
+    }
+
+    public get playing(): boolean {
+        return this._playing;
     }
 
     play(offset: number = 0, globalTime: number = -1) {
@@ -43,21 +52,21 @@ export class AudioPlayer {
         this.globalStartTime = globalTime;
         this.startOffset = offset;
 
-        if (this.playing)
+        if (this._playing)
             this.stop();
 
         this.source.start(0, offset);
-        this.playing = true;
+        this._playing = true;
     }
 
     /**
      * Stops the audio segment. Another call to play() will restart playback from the beginning.
      */
     stop() {
-        if (this.playing)
+        if (this._playing)
             this.source.stop();
         this.startOffset = 0;
-        this.playing = false;
+        this._playing = false;
     }
 
     getPosition(globalTime: number = -1): number {

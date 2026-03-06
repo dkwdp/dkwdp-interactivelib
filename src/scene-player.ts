@@ -95,20 +95,22 @@ export class RenderContext {
 }
 
 export class AudioEngine {
-    private readonly audioPlayers: Map<string, AudioPlayer>;
+    private readonly audioPlayers: AudioPlayer[];
     private readonly audioBuffer: AudioBuffer;
+    private readonly globalTime: number;
 
-    constructor(audioPlayers: Map<string, AudioPlayer>, audioBuffer: AudioBuffer) {
+    constructor(audioPlayers: AudioPlayer[], audioBuffer: AudioBuffer, globalTime: number) {
         this.audioPlayers = audioPlayers;
         this.audioBuffer = audioBuffer;
+        this.globalTime = globalTime;
     }
 
-    playAudio(filename: string) {
+    playAudio(filename: string, offset: number = 0) {
         const source = this.audioBuffer.get(filename);
         if (!source) throw new Error(`Audio file not found: ${filename}`);
         const player = source.createPlayer();
-        player.play();
-        this.audioPlayers.set(filename, player);
+        player.play(offset, this.globalTime);
+        this.audioPlayers.push(player);
     }
 }
 
@@ -126,6 +128,7 @@ export class ScenePlayer {
     private currentSceneStartTime: number = 0;
 
     private currentAudioPlayers: Map<string, AudioPlayer>;
+    private spontaneousAudioPlayers: AudioPlayer[];
 
     constructor(sceneBuffer: Map<string, Scene>) {
         this.sceneBuffer = sceneBuffer;
@@ -133,6 +136,7 @@ export class ScenePlayer {
         this.spriteBuffer = new SpriteBuffer();
         this.audioCtx = new window.AudioContext();
         this.currentAudioPlayers = new Map();
+        this.spontaneousAudioPlayers = [];
     }
 
     /**
@@ -175,7 +179,7 @@ export class ScenePlayer {
         const update = this.currentScene!.update(
             currentSceneTime,
             new RenderContext(p, this.spriteBuffer),
-            new AudioEngine(this.currentAudioPlayers, this.audioBuffer)
+            new AudioEngine(this.spontaneousAudioPlayers, this.audioBuffer, globalTime)
         );
 
         this.handleAudio(update.audios, globalTime);
@@ -195,6 +199,7 @@ export class ScenePlayer {
     }
 
     handleAudio(audios: Audio[], globalTime: number) {
+        // handle current audio players
         const usedPlayers = new Map<string, AudioPlayer>();
         for (const audio of audios) {
             const player = this.currentAudioPlayers.get(audio.filename);
@@ -227,6 +232,9 @@ export class ScenePlayer {
             }
         }
         this.currentAudioPlayers = usedPlayers;
+
+        // handle spontaneous audio players
+        this.spontaneousAudioPlayers = this.spontaneousAudioPlayers.filter(player => player.playing);
     }
 
     resetAudio() {
