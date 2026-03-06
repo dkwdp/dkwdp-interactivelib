@@ -21,7 +21,8 @@ export interface Scene {
      * @param time A timestamp in seconds. Starts at 0 and increases up to duration()
      * @param renderContext Context holding the p5 instance used for rendering and the sprite buffer.
      * @param audioEngine Audio engine used for playing audio.
-     * @returns A list of Audio objects, that should be played at the given time.
+     * @returns A list of audios, where each file includes a predefined seek point.
+     * Upon activation, the player skips the initial audio data and begins playback directly from the specified timestamp.
      */
     update(time: number, renderContext: RenderContext, audioEngine: AudioEngine): SceneUpdate;
 
