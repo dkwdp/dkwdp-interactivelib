@@ -1,6 +1,7 @@
 export type EventKind = 'keydown' | 'keyup' | 'keytyped' | 'mousedown' | 'mouseup' | 'click' | 'mousemove';
 
 // TODO: Coordinate systems for positions
+// TODO: Add MouseWheelEvent
 
 export interface BaseEvent {
     kind: EventKind;
@@ -20,7 +21,7 @@ export interface DkwdpMouseEvent extends BaseEvent {
     kind: 'mousedown' | 'mouseup' | 'click';
     x: number;
     y: number;
-    button: number;
+    button: {left: boolean, right: boolean, center: boolean};
 }
 
 export interface DkwdpMouseMoveEvent extends BaseEvent {
@@ -29,6 +30,7 @@ export interface DkwdpMouseMoveEvent extends BaseEvent {
     y: number;
     dx: number;
     dy: number;
+    dragging: boolean;
 }
 
 export type Evt = DkwdpKeyboardEvent | DkwdpMouseEvent | DkwdpMouseMoveEvent;

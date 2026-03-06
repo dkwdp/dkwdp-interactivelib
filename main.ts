@@ -28,22 +28,23 @@ export function initP5() {
     };
 
     // keyboard events
-    p.keyPressed = scenePlayer.keyPressed;
-    p.keyTyped = scenePlayer.keyTyped;
-    p.keyReleased = scenePlayer.keyReleased;
+    p.keyPressed = () => { scenePlayer.keyPressed(); };
+    p.keyTyped = () => { scenePlayer.keyTyped(); };
+    p.keyReleased = () => { scenePlayer.keyReleased(); };
 
     // mouse events
     p.mouseClicked = () => {
       // TODO: rework this
       scenePlayer.setScene(sceneBuffer.get("initScene")!);
       scenePlayer.play();
-      scenePlayer.mouseClicked();
     }
-    p.mouseMoved = scenePlayer.mouseMoved;
-    p.mouseReleased = scenePlayer.mouseReleased;
-    p.mousePressed = scenePlayer.mousePressed;
-    p.mouseWheel = scenePlayer.mouseWheel;
-    p.doubleClicked = scenePlayer.doubleClicked;
-    p.mouseDragged = scenePlayer.mouseDragged;
+    /*
+    p.mouseMoved = () => {
+      console.log("mouse moved");
+    }
+     */
+    p.mouseMoved = () => { scenePlayer.mouseMoved(); };
+    p.mouseReleased = () => { scenePlayer.mouseReleased(); };
+    p.mousePressed = () => { scenePlayer.mousePressed(); };
   });
 }

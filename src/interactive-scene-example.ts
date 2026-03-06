@@ -1,11 +1,13 @@
 import {RenderContext, AudioEngine} from "./scene-player";
 import {Scene, SceneUpdate} from "./scene";
+import {Evt} from "./event";
 
 export class InteractiveSceneExample implements Scene {
     private x: number = 1;
+    private y: number = 1;
     private direction: number = 2;
 
-    update(_time: number, renderContext: RenderContext, audioEngine: AudioEngine): SceneUpdate {
+    update(_time: number, renderContext: RenderContext, audioEngine: AudioEngine, events: Evt[]): SceneUpdate {
         if (this.x <= -200) {
             this.direction = 2;
             audioEngine.playAudio("assets/meow.mp3");
@@ -15,7 +17,14 @@ export class InteractiveSceneExample implements Scene {
         }
         this.x += this.direction;
 
-        renderContext.renderSprite("assets/cat.png", this.x, 50, 0.2);
+        for (const ev of events) {
+            console.log(ev);
+            if (ev.kind === 'mousemove') {
+                this.y = ev.y;
+            }
+        }
+
+        renderContext.renderSprite("assets/cat.png", this.x, this.y, 0.2);
 
         return SceneUpdate.empty();
     }

@@ -1,7 +1,7 @@
 import {Audio, AudioFile, AudioPlayer} from "./audio";
 import p5 from "p5";
 import {Scene} from "./scene";
-import {DkwdpKeyboardEvent, Evt} from "./event";
+import {DkwdpKeyboardEvent, DkwdpMouseEvent, DkwdpMouseMoveEvent, Evt} from "./event";
 
 const MAX_TIME_EPSILON = 0.001;
 
@@ -94,6 +94,7 @@ export class RenderContext {
 }
 
 export class AudioEngine {
+    // noinspection JSMismatchedCollectionQueryUpdate
     private readonly audioPlayers: AudioPlayer[];
     private readonly audioBuffer: AudioBuffer;
     private readonly globalTime: number;
@@ -131,6 +132,9 @@ export class ScenePlayer {
 
     private events: Evt[] = [];
 
+    private lastMouseX: number = NaN;
+    private lastMouseY: number = NaN;
+
     constructor(p: p5, sceneBuffer: Map<string, Scene>) {
         this.p = p;
         this.sceneBuffer = sceneBuffer;
@@ -163,7 +167,7 @@ export class ScenePlayer {
     play() {
         this.audioCtx.resume().then(() => {
             this.initialized = true;
-        })
+        });
     }
 
     /**
@@ -186,8 +190,9 @@ export class ScenePlayer {
             this.events
         );
 
-        this.handleAudio(update.audios, globalTime);
+        this.events = [];
 
+        this.handleAudio(update.audios, globalTime);
         this.handleNextScene(update.nextScene);
     }
 
@@ -242,7 +247,6 @@ export class ScenePlayer {
     }
 
     resetAudio() {
-        console.log("resetting audio", this.currentAudioPlayers.size);
         for (const player of this.currentAudioPlayers.values()) {
             player.stop();
         }
@@ -256,6 +260,7 @@ export class ScenePlayer {
 
     // keyboard events
     keyPressed() {
+        if (!this.initialized) return;
         const timestamp = this.currentTime(this.audioCtx.currentTime);
         const evt: DkwdpKeyboardEvent = {
             kind: 'keydown',
@@ -270,6 +275,7 @@ export class ScenePlayer {
     }
 
     keyTyped() {
+        if (!this.initialized) return;
         const timestamp = this.currentTime(this.audioCtx.currentTime);
         const evt: DkwdpKeyboardEvent = {
             kind: 'keytyped',
@@ -284,6 +290,7 @@ export class ScenePlayer {
     }
 
     keyReleased() {
+        if (!this.initialized) return;
         const timestamp = this.currentTime(this.audioCtx.currentTime);
         const evt: DkwdpKeyboardEvent = {
             kind: 'keyup',
@@ -297,26 +304,64 @@ export class ScenePlayer {
         this.events.push(evt);
     }
 
-    // mouse events
-    mouseClicked() {
-    }
-
-    mouseMoved() {
-    }
-
     mouseReleased() {
+        if (!this.initialized) return;
+        const timestamp = this.currentTime(this.audioCtx.currentTime);
+        const evt: DkwdpMouseEvent = {
+            kind: 'mousedown',
+            timestamp: timestamp,
+            x: this.p.mouseX,
+            y: this.p.mouseY,
+            button: this.p.mouseButton
+        }
+        this.events.push(evt);
     }
 
     mousePressed() {
+        if (!this.initialized) return;
+        const timestamp = this.currentTime(this.audioCtx.currentTime);
+        const evt: DkwdpMouseEvent = {
+            kind: 'mousedown',
+            timestamp: timestamp,
+            x: this.p.mouseX,
+            y: this.p.mouseY,
+            button: this.p.mouseButton
+        }
+        this.events.push(evt);
     }
 
+    mouseMoved() {
+        if (!this.initialized) return;
+        const timestamp = this.currentTime(this.audioCtx.currentTime);
+
+        if (Number.isNaN(this.lastMouseX) || Number.isNaN(this.lastMouseY)) {
+            this.lastMouseX = this.p.mouseX;
+            this.lastMouseY = this.p.mouseY;
+        }
+
+        const dx = this.p.mouseX - this.lastMouseX;
+        const dy = this.p.mouseY - this.lastMouseY;
+
+        const evt: DkwdpMouseMoveEvent = {
+            kind: 'mousemove',
+            timestamp: timestamp,
+            x: this.p.mouseX,
+            y: this.p.mouseY,
+            dx,
+            dy,
+            dragging: this.p.mouseIsPressed,
+        }
+        this.events.push(evt);
+
+        this.lastMouseX = this.p.mouseX;
+        this.lastMouseY = this.p.mouseY;
+    }
+
+    /*
+    TODO: implement these
     mouseWheel() {
     }
-
     doubleClicked() {
     }
-
-    mouseDragged() {
-    }
-
+     */
 }
