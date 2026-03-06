@@ -10,13 +10,12 @@ export function initP5() {
         ["initScene", new AnimationSceneExample()],
         ["scene1", new InteractiveSceneExample()],
     ]);
-    let scenePlayer = new ScenePlayer(sceneBuffer);
+    let scenePlayer = new ScenePlayer(p, sceneBuffer);
 
     p.setup = () => {
       p.createCanvas(width, height).parent('sketch-holder');
 
       scenePlayer.load(
-          p,
           ["assets/01_intro.mp3", "assets/meow.mp3"],
           ["assets/cat.png", "assets/hedgehog.png"]
       ).then(() => {});
@@ -28,13 +27,23 @@ export function initP5() {
       scenePlayer.update(p);
     };
 
-    p.keyTyped = () => {
-    }
+    // keyboard events
+    p.keyPressed = scenePlayer.keyPressed;
+    p.keyTyped = scenePlayer.keyTyped;
+    p.keyReleased = scenePlayer.keyReleased;
 
+    // mouse events
     p.mouseClicked = () => {
-      // const scene = new AnimationSceneExample();
+      // TODO: rework this
       scenePlayer.setScene(sceneBuffer.get("initScene")!);
       scenePlayer.play();
+      scenePlayer.mouseClicked();
     }
+    p.mouseMoved = scenePlayer.mouseMoved;
+    p.mouseReleased = scenePlayer.mouseReleased;
+    p.mousePressed = scenePlayer.mousePressed;
+    p.mouseWheel = scenePlayer.mouseWheel;
+    p.doubleClicked = scenePlayer.doubleClicked;
+    p.mouseDragged = scenePlayer.mouseDragged;
   });
 }

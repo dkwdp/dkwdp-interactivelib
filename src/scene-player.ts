@@ -1,6 +1,7 @@
 import {Audio, AudioFile, AudioPlayer} from "./audio";
 import p5 from "p5";
 import {Scene} from "./scene";
+import {DkwdpKeyboardEvent, Evt} from "./event";
 
 const MAX_TIME_EPSILON = 0.001;
 
@@ -113,6 +114,7 @@ export class AudioEngine {
 }
 
 export class ScenePlayer {
+    private readonly p: p5;
     private readonly sceneBuffer: Map<string, Scene>;
     private readonly audioBuffer: AudioBuffer;
     private readonly spriteBuffer: SpriteBuffer;
@@ -120,7 +122,6 @@ export class ScenePlayer {
     private loaded: boolean = false;
     private initialized: boolean = false;
     private currentScene: Scene | null = null;
-    private playing: boolean = false;
 
     /* The timepoint when the currentAnimationScene was started in the time system of the audioCtx */
     private currentSceneStartTime: number = 0;
@@ -128,7 +129,10 @@ export class ScenePlayer {
     private currentAudioPlayers: Map<string, AudioPlayer>;
     private spontaneousAudioPlayers: AudioPlayer[];
 
-    constructor(sceneBuffer: Map<string, Scene>) {
+    private events: Evt[] = [];
+
+    constructor(p: p5, sceneBuffer: Map<string, Scene>) {
+        this.p = p;
         this.sceneBuffer = sceneBuffer;
         this.audioBuffer = new AudioBuffer();
         this.spriteBuffer = new SpriteBuffer();
@@ -140,14 +144,13 @@ export class ScenePlayer {
     /**
      * Loads audio and sprite resources into buffers and marks the instance as loaded.
      *
-     * @param p - The p5.js instance used for processing sprite assets.
      * @param audios - An array of audio file paths to be loaded into the audio buffer.
      * @param sprites - An array of sprite file paths to be loaded into the sprite buffer.
      * @return A promise that resolves when all resources are successfully loaded.
      */
-    async load(p: p5, audios: string[], sprites: string[]) {
+    async load(audios: string[], sprites: string[]) {
         await this.audioBuffer.load(audios, this.audioCtx);
-        await this.spriteBuffer.load(sprites, p);
+        await this.spriteBuffer.load(sprites, this.p);
         this.loaded = true;
     }
 
@@ -158,8 +161,9 @@ export class ScenePlayer {
     }
 
     play() {
-        this.audioCtx.resume().then(() => {this.initialized = true;})
-        this.playing = true;
+        this.audioCtx.resume().then(() => {
+            this.initialized = true;
+        })
     }
 
     /**
@@ -178,7 +182,8 @@ export class ScenePlayer {
         const update = this.currentScene!.update(
             currentSceneTime,
             new RenderContext(p, this.spriteBuffer),
-            new AudioEngine(this.spontaneousAudioPlayers, this.audioBuffer, globalTime)
+            new AudioEngine(this.spontaneousAudioPlayers, this.audioBuffer, globalTime),
+            this.events
         );
 
         this.handleAudio(update.audios, globalTime);
@@ -242,5 +247,76 @@ export class ScenePlayer {
             player.stop();
         }
         this.currentAudioPlayers.clear();
+
+        for (const player of this.spontaneousAudioPlayers) {
+            player.stop();
+        }
+        this.spontaneousAudioPlayers = [];
     }
+
+    // keyboard events
+    keyPressed() {
+        const timestamp = this.currentTime(this.audioCtx.currentTime);
+        const evt: DkwdpKeyboardEvent = {
+            kind: 'keydown',
+            timestamp: timestamp,
+            key: this.p.key,
+            code: this.p.code,
+            keyCode: this.p.keyCode,
+            shiftKey: this.p.keyIsDown(this.p.SHIFT),
+            ctrlKey: this.p.keyIsDown(this.p.CONTROL),
+        }
+        this.events.push(evt);
+    }
+
+    keyTyped() {
+        const timestamp = this.currentTime(this.audioCtx.currentTime);
+        const evt: DkwdpKeyboardEvent = {
+            kind: 'keytyped',
+            timestamp: timestamp,
+            key: this.p.key,
+            code: this.p.code,
+            keyCode: this.p.keyCode,
+            shiftKey: this.p.keyIsDown(this.p.SHIFT),
+            ctrlKey: this.p.keyIsDown(this.p.CONTROL),
+        }
+        this.events.push(evt);
+    }
+
+    keyReleased() {
+        const timestamp = this.currentTime(this.audioCtx.currentTime);
+        const evt: DkwdpKeyboardEvent = {
+            kind: 'keyup',
+            timestamp: timestamp,
+            key: this.p.key,
+            code: this.p.code,
+            keyCode: this.p.keyCode,
+            shiftKey: this.p.keyIsDown(this.p.SHIFT),
+            ctrlKey: this.p.keyIsDown(this.p.CONTROL),
+        }
+        this.events.push(evt);
+    }
+
+    // mouse events
+    mouseClicked() {
+    }
+
+    mouseMoved() {
+    }
+
+    mouseReleased() {
+    }
+
+    mousePressed() {
+    }
+
+    mouseWheel() {
+    }
+
+    doubleClicked() {
+    }
+
+    mouseDragged() {
+    }
+
 }
