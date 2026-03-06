@@ -11,11 +11,10 @@ export default defineConfig({
       formats: ['es', 'umd']
     },
     rollupOptions: {
-      external: ['p5', 'p5.sound'],
+      external: ['p5'],
       output: {
         globals: { 
-          p5: 'p5',
-          'p5.sound': 'p5.sound'
+          p5: 'p5'
         }
       }
     }

@@ -152,6 +152,7 @@ export class ScenePlayer {
     }
 
     setScene(scene: Scene) {
+        if (!scene) throw new Error(`Scene is ${scene} but should be a Scene`);
         this.currentScene = scene;
         this.currentSceneStartTime = this.audioCtx.currentTime;
     }

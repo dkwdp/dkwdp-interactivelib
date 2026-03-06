@@ -15,24 +15,33 @@
     "url": "git+https://github.com/dkwdp/dkwdp-interactivelib.git"
   },
   "license": "GPL-3.0-or-later",
-  "author": "bruno.schilling@protonmail.ch",
+  "author": "Bruno Schilling bruno.schilling@protonmail.ch",
   "type": "module",
-  "main": "dist/dpwdk-interactivelib.js",
+  "main": "dist/dkwdp-interactivelib.cjs",
+  "module": "dist/dkwdp-interactivelib.js",
   "types": "dist/dkwdp-interactivelib.d.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc"
+    "test": "echo \"Error: no test specified\"",
+    "build": "vite build"
   },
+  "exports": {
+    ".": {
+      "types": "dist/dkwdp-interactivelib.d.ts",
+      "import": "dist/dkwdp-interactivelib.js",
+      "require": "dist/dkwdp-interactivelib.cjs"
+    }
+  },
+  "files": ["dist"],
   "devDependencies": {
     "typescript": "^5.9.3",
     "vite": "^7.3.1",
-    "vite-plugin-dts": "^4.5.4"
-  },
-  "peerDependencies": {
-    "p5": "^2.0.0",
+    "vite-plugin-dts": "^4.5.4",
     "@types/p5": "^1.7.7"
   },
   "dependencies": {
-    "tone": "^15.0.0"
+    "p5": "^2.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
