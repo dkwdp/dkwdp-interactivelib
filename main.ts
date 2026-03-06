@@ -1,11 +1,10 @@
 import p5 from 'p5';
-import {ScenePlayer} from "./src/scene-player";
+import {ScenePlayer} from "./src";
 import {AnimationSceneExample} from "./src/animation-scene-example";
 import {InteractiveSceneExample} from "./src/interactive-scene-example";
-import {Scene} from "./src/scene";
+import {Scene} from "./src";
 
 export function initP5() {
-
   new p5((p, width = 1000, height = 400) => {
     let sceneBuffer = new Map<string, Scene>([
         ["initScene", new AnimationSceneExample()],

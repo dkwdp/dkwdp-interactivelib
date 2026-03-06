@@ -1,2 +1,3 @@
 import p5 from "p5";
-export * from './audio-player';
+export * from "./scene-player";
+export * from "./scene";

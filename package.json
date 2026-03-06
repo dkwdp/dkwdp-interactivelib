@@ -17,9 +17,11 @@
   "license": "GPL-3.0-or-later",
   "author": "bruno.schilling@protonmail.ch",
   "type": "module",
-  "main": "dpwdk-interactivelib.js",
+  "main": "dist/dpwdk-interactivelib.js",
+  "types": "dist/dkwdp-interactivelib.d.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc"
   },
   "devDependencies": {
     "typescript": "^5.9.3",

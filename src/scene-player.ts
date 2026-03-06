@@ -1,7 +1,6 @@
 import {Audio, AudioFile, AudioPlayer} from "./audio";
 import p5 from "p5";
 import {Scene} from "./scene";
-import {worldToScreen} from "./figure";
 
 const MAX_TIME_EPSILON = 0.001;
 
@@ -89,8 +88,7 @@ export class RenderContext {
      */
     renderSprite(sprite: string, x: number, y: number, size: number = 1.0, rotation: number = 0) {
         let image = this.spriteBuffer.get(sprite);
-        let world_xy = worldToScreen(x, y, this.p);
-        this.p.image(image, world_xy[0], world_xy[1], image.width * size, image.height * size);
+        this.p.image(image, x, y, image.width * size, image.height * size);
     }
 }
 
