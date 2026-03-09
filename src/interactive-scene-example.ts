@@ -2,7 +2,7 @@ import {RenderContext, AudioEngine} from "./scene-player";
 import {Scene, SceneUpdate} from "./scene";
 import {Evt} from "./event";
 
-export class InteractiveSceneExample implements Scene {
+export class InteractiveSceneExample extends Scene {
     private x: number = 1;
     private y: number = 1;
     private direction: number = 2;

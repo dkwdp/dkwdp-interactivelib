@@ -180,6 +180,10 @@ export class ScenePlayer {
         if (!scene) throw new Error(`Scene is ${scene} but should be a Scene`);
         this.currentScene = scene;
         this.currentSceneStartTime = this.audioCtx.currentTime;
+        this.currentScene.init(
+            new RenderContext(this.p, this.spriteBuffer),
+            new AudioEngine(this.spontaneousAudioPlayers, this.audioBuffer, this.audioCtx.currentTime),
+        )
     }
 
     play() {
@@ -196,14 +200,14 @@ export class ScenePlayer {
         return globalTime - this.currentSceneStartTime;
     }
 
-    update(p: p5) {
+    update() {
         if (!this.loaded || !this.initialized || !this.currentScene) return;
 
         const globalTime = this.audioCtx.currentTime;
         const currentSceneTime = this.currentTime(globalTime);
         const update = this.currentScene!.update(
             currentSceneTime,
-            new RenderContext(p, this.spriteBuffer),
+            new RenderContext(this.p, this.spriteBuffer),
             new AudioEngine(this.spontaneousAudioPlayers, this.audioBuffer, globalTime),
             this.events
         );

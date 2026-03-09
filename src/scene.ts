@@ -16,7 +16,15 @@ export class SceneUpdate {
     }
 }
 
-export interface Scene {
+export abstract class Scene {
+    /**
+     * Initializes the application with the specified time, render context, and audio engine.
+     *
+     * @param renderContext - The rendering context to be used for rendering graphics.
+     * @param audioEngine - The audio engine instance used for managing sound and music playback.
+     */
+    init(renderContext: RenderContext, audioEngine: AudioEngine): void {}
+
     // TODO: return only nextScene, and add Audios[] interface to AudioEngine
     /**
      * Creates a Render object that shows the current state at the given time.
@@ -27,11 +35,13 @@ export interface Scene {
      * @returns A list of audios, where each file includes a predefined seek point.
      * Upon activation, the player skips the initial audio data and begins playback directly from the specified timestamp.
      */
-    update(time: number, renderContext: RenderContext, audioEngine: AudioEngine, events: Evt[]): SceneUpdate;
+    abstract update(time: number, renderContext: RenderContext, audioEngine: AudioEngine, events: Evt[]): SceneUpdate;
 
     /**
      * Returns the duration of the scene in seconds. If the duration is not defined or can vary, return -1.
      */
-    duration(): number;
+    duration(): number {
+        return -1;
+    }
 }
 

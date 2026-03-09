@@ -2,7 +2,7 @@ import {Scene, SceneUpdate} from "./scene";
 import {Audio} from "./audio";
 import {RenderContext} from "./scene-player";
 
-export class AnimationSceneExample implements Scene {
+export class AnimationSceneExample extends Scene {
     duration(): number {
         return 2.0;
     }

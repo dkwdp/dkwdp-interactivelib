@@ -24,7 +24,7 @@ export function initP5() {
     p.draw = () => {
       p.background(30);
 
-      scenePlayer.update(p);
+      scenePlayer.update();
     };
 
   });
