@@ -181,6 +181,7 @@ export class ScenePlayer {
             }
         }
         this.p.mouseMoved = () => { this.mouseMoved(); };
+        this.p.mouseDragged = () => { this.mouseDragged(); };
         this.p.mouseWheel = (event: WheelEvent) => { this.mouseWheel(event); };
         this.p.mouseReleased = () => { this.mouseReleased(); };
         this.p.mousePressed = () => { this.mousePressed(); };
@@ -362,10 +363,7 @@ export class ScenePlayer {
         this.events.push(evt);
     }
 
-    mouseMoved() {
-        if (!this.initialized) return;
-        const timestamp = this.currentTime(this.audioCtx.currentTime);
-
+    mouseMovement(): [number, number] {
         if (Number.isNaN(this.lastMouseX) || Number.isNaN(this.lastMouseY)) {
             this.lastMouseX = this.p.mouseX;
             this.lastMouseY = this.p.mouseY;
@@ -374,6 +372,18 @@ export class ScenePlayer {
         const dx = this.p.mouseX - this.lastMouseX;
         const dy = this.p.mouseY - this.lastMouseY;
 
+        this.lastMouseX = this.p.mouseX;
+        this.lastMouseY = this.p.mouseY;
+
+        return [dx, dy];
+    }
+
+    mouseDragged() {
+        if (!this.initialized) return;
+        const timestamp = this.currentTime(this.audioCtx.currentTime);
+
+        const [dx, dy] = this.mouseMovement();
+
         const evt: DkwdpMouseMoveEvent = {
             kind: 'mousemove',
             timestamp: timestamp,
@@ -381,7 +391,26 @@ export class ScenePlayer {
             y: this.p.mouseY,
             dx,
             dy,
-            dragging: this.p.mouseIsPressed,
+            dragging: true,
+        }
+        this.events.push(evt);
+
+    }
+
+    mouseMoved() {
+        if (!this.initialized) return;
+        const timestamp = this.currentTime(this.audioCtx.currentTime);
+
+        const [dx, dy] = this.mouseMovement();
+
+        const evt: DkwdpMouseMoveEvent = {
+            kind: 'mousemove',
+            timestamp: timestamp,
+            x: this.p.mouseX,
+            y: this.p.mouseY,
+            dx,
+            dy,
+            dragging: false,
         }
         this.events.push(evt);
 
