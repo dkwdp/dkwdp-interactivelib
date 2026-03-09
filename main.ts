@@ -10,7 +10,7 @@ export function initP5() {
         ["initScene", new AnimationSceneExample()],
         ["scene1", new InteractiveSceneExample()],
     ]);
-    let scenePlayer = new ScenePlayer(p, sceneBuffer);
+    let scenePlayer = new ScenePlayer(p, sceneBuffer, "initScene");
 
     p.setup = () => {
       p.createCanvas(width, height).parent('sketch-holder');
@@ -27,24 +27,5 @@ export function initP5() {
       scenePlayer.update(p);
     };
 
-    // keyboard events
-    p.keyPressed = () => { scenePlayer.keyPressed(); };
-    p.keyTyped = () => { scenePlayer.keyTyped(); };
-    p.keyReleased = () => { scenePlayer.keyReleased(); };
-
-    // mouse events
-    p.mouseClicked = () => {
-      // TODO: rework this
-      scenePlayer.setScene(sceneBuffer.get("initScene")!);
-      scenePlayer.play();
-    }
-    /*
-    p.mouseMoved = () => {
-      console.log("mouse moved");
-    }
-     */
-    p.mouseMoved = () => { scenePlayer.mouseMoved(); };
-    p.mouseReleased = () => { scenePlayer.mouseReleased(); };
-    p.mousePressed = () => { scenePlayer.mousePressed(); };
   });
 }

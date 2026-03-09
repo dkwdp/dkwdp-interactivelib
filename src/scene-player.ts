@@ -117,6 +117,7 @@ export class AudioEngine {
 export class ScenePlayer {
     private readonly p: p5;
     private readonly sceneBuffer: Map<string, Scene>;
+    private readonly startScene: string;
     private readonly audioBuffer: AudioBuffer;
     private readonly spriteBuffer: SpriteBuffer;
     private readonly audioCtx: AudioContext;
@@ -135,9 +136,10 @@ export class ScenePlayer {
     private lastMouseX: number = NaN;
     private lastMouseY: number = NaN;
 
-    constructor(p: p5, sceneBuffer: Map<string, Scene>) {
+    constructor(p: p5, sceneBuffer: Map<string, Scene>, startScene: string) {
         this.p = p;
         this.sceneBuffer = sceneBuffer;
+        this.startScene = startScene;
         this.audioBuffer = new AudioBuffer();
         this.spriteBuffer = new SpriteBuffer();
         this.audioCtx = new window.AudioContext();
@@ -147,6 +149,7 @@ export class ScenePlayer {
 
     /**
      * Loads audio and sprite resources into buffers and marks the instance as loaded.
+     * Also sets up event handlers for keyboard and mouse events.
      *
      * @param audios - An array of audio file paths to be loaded into the audio buffer.
      * @param sprites - An array of sprite file paths to be loaded into the sprite buffer.
@@ -156,6 +159,21 @@ export class ScenePlayer {
         await this.audioBuffer.load(audios, this.audioCtx);
         await this.spriteBuffer.load(sprites, this.p);
         this.loaded = true;
+
+        // keyboard events
+        this.p.keyPressed = () => { this.keyPressed(); };
+        this.p.keyTyped = () => { this.keyTyped(); };
+        this.p.keyReleased = () => { this.keyReleased(); };
+
+        // mouse events
+        this.p.mouseClicked = () => {
+            // TODO: rework this
+            this.setScene(this.sceneBuffer.get(this.startScene)!);
+            this.play();
+        }
+        this.p.mouseMoved = () => { this.mouseMoved(); };
+        this.p.mouseReleased = () => { this.mouseReleased(); };
+        this.p.mousePressed = () => { this.mousePressed(); };
     }
 
     setScene(scene: Scene) {

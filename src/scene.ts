@@ -17,6 +17,7 @@ export class SceneUpdate {
 }
 
 export interface Scene {
+    // TODO: return only nextScene, and add Audios[] interface to AudioEngine
     /**
      * Creates a Render object that shows the current state at the given time.
      * @param time A timestamp in seconds. Starts at 0 and increases up to duration()
