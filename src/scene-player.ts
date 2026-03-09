@@ -168,8 +168,10 @@ export class ScenePlayer {
         // mouse events
         this.p.mouseClicked = () => {
             // TODO: rework this
-            this.setScene(this.sceneBuffer.get(this.startScene)!);
-            this.play();
+            if (!this.initialized) {
+                this.setScene(this.sceneBuffer.get(this.startScene)!);
+                this.play();
+            }
         }
         this.p.mouseMoved = () => { this.mouseMoved(); };
         this.p.mouseReleased = () => { this.mouseReleased(); };
