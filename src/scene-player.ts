@@ -1,7 +1,7 @@
 import {Audio, AudioFile, AudioPlayer} from "./audio";
 import p5 from "p5";
 import {Scene} from "./scene";
-import {DkwdpKeyboardEvent, DkwdpMouseEvent, DkwdpMouseMoveEvent, Evt} from "./event";
+import {DkwdpKeyboardEvent, DkwdpMouseEvent, DkwdpMouseMoveEvent, DkwdpMouseWheelEvent, Evt} from "./event";
 
 const MAX_TIME_EPSILON = 0.001;
 
@@ -84,12 +84,19 @@ export class RenderContext {
      * @param y The y-coordinate of the sprite's center.
      * @param size The size of the sprite.
      * @param rotation The rotation of the sprite in radians.
+     * @param alpha The opacity of the sprite.
      *
      * TODO: use coordinate system, use rotation
      */
-    renderSprite(sprite: string, x: number, y: number, size: number = 1.0, rotation: number = 0) {
+    renderSprite(sprite: string, x: number, y: number, size: number = 1.0, rotation: number = 0, alpha: number = 1.0) {
         let image = this.spriteBuffer.get(sprite);
+        if (alpha < 1.0) {
+            this.p.tint(255, alpha * 255);
+        }
         this.p.image(image, x, y, image.width * size, image.height * size);
+        if (alpha < 1.0) {
+            this.p.tint(255, 255);
+        }
     }
 }
 
@@ -174,6 +181,7 @@ export class ScenePlayer {
             }
         }
         this.p.mouseMoved = () => { this.mouseMoved(); };
+        this.p.mouseWheel = (event: WheelEvent) => { this.mouseWheel(event); };
         this.p.mouseReleased = () => { this.mouseReleased(); };
         this.p.mousePressed = () => { this.mousePressed(); };
     }
@@ -381,10 +389,21 @@ export class ScenePlayer {
         this.lastMouseY = this.p.mouseY;
     }
 
-    /*
-    TODO: implement these
-    mouseWheel() {
+    mouseWheel(event: WheelEvent) {
+        if (!this.initialized) return;
+        const timestamp = this.currentTime(this.audioCtx.currentTime);
+
+        const evt: DkwdpMouseWheelEvent = {
+            kind: 'mousewheel',
+            timestamp: timestamp,
+            wheelX: event.deltaX,
+            wheelY: event.deltaY,
+        }
+        this.events.push(evt);
     }
+
+    /*
+    TODO
     doubleClicked() {
     }
      */

@@ -25,7 +25,7 @@ export abstract class Scene {
      */
     init(renderContext: RenderContext, audioEngine: AudioEngine): void {}
 
-    // TODO: return only nextScene, and add Audios[] interface to AudioEngine
+    // TODO: return void. And add Audios[] interface to AudioEngine. Add nextScene to EventManager
     /**
      * Creates a Render object that shows the current state at the given time.
      * @param time A timestamp in seconds. Starts at 0 and increases up to duration()

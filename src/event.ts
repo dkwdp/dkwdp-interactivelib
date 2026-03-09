@@ -1,4 +1,4 @@
-export type EventKind = 'keydown' | 'keyup' | 'keytyped' | 'mousedown' | 'mouseup' | 'click' | 'mousemove';
+export type EventKind = 'keydown' | 'keyup' | 'keytyped' | 'mousedown' | 'mouseup' | 'click' | 'mousemove' | 'mousewheel';
 
 // TODO: Coordinate systems for positions
 // TODO: Add MouseWheelEvent
@@ -33,4 +33,10 @@ export interface DkwdpMouseMoveEvent extends BaseEvent {
     dragging: boolean;
 }
 
-export type Evt = DkwdpKeyboardEvent | DkwdpMouseEvent | DkwdpMouseMoveEvent;
+export interface DkwdpMouseWheelEvent extends BaseEvent {
+    kind: 'mousewheel';
+    wheelX: number;
+    wheelY: number;
+}
+
+export type Evt = DkwdpKeyboardEvent | DkwdpMouseEvent | DkwdpMouseMoveEvent | DkwdpMouseWheelEvent;
