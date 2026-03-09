@@ -340,7 +340,7 @@ export class ScenePlayer {
         if (!this.initialized) return;
         const timestamp = this.currentTime(this.audioCtx.currentTime);
         const evt: DkwdpMouseEvent = {
-            kind: 'mousedown',
+            kind: 'mouseup',
             timestamp: timestamp,
             x: this.p.mouseX,
             y: this.p.mouseY,
