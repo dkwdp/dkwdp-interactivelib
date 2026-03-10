@@ -183,8 +183,8 @@ export class ScenePlayer {
         this.p.mouseMoved = () => { this.mouseMoved(); };
         this.p.mouseDragged = () => { this.mouseDragged(); };
         this.p.mouseWheel = (event: WheelEvent) => { this.mouseWheel(event); };
-        this.p.mouseReleased = () => { this.mouseReleased(); };
-        this.p.mousePressed = () => { this.mousePressed(); };
+        this.p.mouseReleased = (evt: MouseEvent) => { this.mouseReleased(evt); };
+        this.p.mousePressed = (evt: MouseEvent) => { this.mousePressed(evt); };
     }
 
     setScene(scene: Scene) {
@@ -337,7 +337,7 @@ export class ScenePlayer {
         this.events.push(evt);
     }
 
-    mouseReleased() {
+    mouseReleased(event: MouseEvent) {
         if (!this.initialized) return;
         const timestamp = this.currentTime(this.audioCtx.currentTime);
         const evt: DkwdpMouseEvent = {
@@ -345,12 +345,12 @@ export class ScenePlayer {
             timestamp: timestamp,
             x: this.p.mouseX,
             y: this.p.mouseY,
-            button: this.p.mouseButton
+            button: event.button,
         }
         this.events.push(evt);
     }
 
-    mousePressed() {
+    mousePressed(event: MouseEvent) {
         if (!this.initialized) return;
         const timestamp = this.currentTime(this.audioCtx.currentTime);
         const evt: DkwdpMouseEvent = {
@@ -358,7 +358,7 @@ export class ScenePlayer {
             timestamp: timestamp,
             x: this.p.mouseX,
             y: this.p.mouseY,
-            button: this.p.mouseButton
+            button: event.button,
         }
         this.events.push(evt);
     }
@@ -427,6 +427,8 @@ export class ScenePlayer {
             timestamp: timestamp,
             wheelX: event.deltaX,
             wheelY: event.deltaY,
+            x: this.p.mouseX,
+            y: this.p.mouseY,
         }
         this.events.push(evt);
     }

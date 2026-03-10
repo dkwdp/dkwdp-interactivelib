@@ -21,7 +21,7 @@ export interface DkwdpMouseEvent extends BaseEvent {
     kind: 'mousedown' | 'mouseup' | 'click';
     x: number;
     y: number;
-    button: {left: boolean, right: boolean, center: boolean};
+    button: number;
 }
 
 export interface DkwdpMouseMoveEvent extends BaseEvent {
@@ -37,6 +37,8 @@ export interface DkwdpMouseWheelEvent extends BaseEvent {
     kind: 'mousewheel';
     wheelX: number;
     wheelY: number;
+    x: number;
+    y: number;
 }
 
 export type Evt = DkwdpKeyboardEvent | DkwdpMouseEvent | DkwdpMouseMoveEvent | DkwdpMouseWheelEvent;
