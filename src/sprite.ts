@@ -32,7 +32,6 @@ export class Sprite {
         const height = image.height * this.size;
 
         if (this.x - width / 2 <= x && this.x + width / 2 >= x && this.y - height / 2 <= y && this.y + height / 2 >= y) {
-            console.log("in rect");
             if (image) {
                 // Calculate relative position within the sprite (0 to 1)
                 const relativeX = (x - (this.x - width / 2)) / width;
