@@ -23,12 +23,20 @@ export class Sprite {
 
     touches(x: number, y: number, renderContext: RenderContext): boolean {
         // TODO: respect rotation
-        if (this.x <= x && this.x + this.size >= x && this.y <= y && this.y + this.size >= y) {
-            const image = renderContext.spriteBuffer.get(this.filename);
+        const image = renderContext.spriteBuffer.get(this.filename);
+        if (!image) {
+            console.error(`Sprite image not found: ${this.filename}`);
+            return false;
+        }
+        const width = image.width * this.size;
+        const height = image.height * this.size;
+
+        if (this.x - width / 2 <= x && this.x + width / 2 >= x && this.y - height / 2 <= y && this.y + height / 2 >= y) {
+            console.log("in rect");
             if (image) {
                 // Calculate relative position within the sprite (0 to 1)
-                const relativeX = (x - this.x) / this.size;
-                const relativeY = (y - this.y) / this.size;
+                const relativeX = (x - (this.x - width / 2)) / width;
+                const relativeY = (y - (this.y - height / 2)) / height;
 
                 // Map to pixel coordinates in the image
                 const pixelX = Math.floor(relativeX * image.width);
