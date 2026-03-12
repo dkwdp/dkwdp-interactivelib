@@ -163,6 +163,10 @@ export class ScenePlayer {
         this.p.mouseWheel = (event: WheelEvent) => { this.mouseWheel(event); };
         this.p.mouseReleased = (evt: MouseEvent) => { this.mouseReleased(evt); };
         this.p.mousePressed = (evt: MouseEvent) => { this.mousePressed(evt); };
+
+        window.addEventListener('contextmenu', (event: MouseEvent) => {
+            event.preventDefault();
+        });
     }
 
     setScene(scene: Scene) {
