@@ -1,6 +1,7 @@
 import {Scene, SceneUpdate} from "./scene";
 import {Audio} from "./audio";
 import {RenderContext} from "./scene-player";
+import {Sprite} from "./sprite";
 
 export class AnimationSceneExample extends Scene {
     duration(): number {
@@ -14,7 +15,7 @@ export class AnimationSceneExample extends Scene {
         const x = 50 + Math.sin(progress * 2 * Math.PI * 2) * 20;
         const y = 50 + Math.cos(progress * 2 * Math.PI * 2) * 20;
 
-        renderContext.renderSprite("assets/cat.png", x, y, 0.2);
+        new Sprite("assets/cat.png", x, y, 0.2).draw(renderContext);
 
         return new SceneUpdate([new Audio("assets/01_intro.mp3", time)]);
     }

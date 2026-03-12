@@ -76,28 +76,6 @@ export class RenderContext {
         this.p = p;
         this.spriteBuffer = spriteBuffer;
     }
-
-    /**
-     * Renders a sprite at the given position.
-     * @param sprite The sprite to render.
-     * @param x The x-coordinate of the sprite's center.
-     * @param y The y-coordinate of the sprite's center.
-     * @param size The size of the sprite.
-     * @param rotation The rotation of the sprite in radians.
-     * @param alpha The opacity of the sprite.
-     *
-     * TODO: use coordinate system, use rotation
-     */
-    renderSprite(sprite: string, x: number, y: number, size: number = 1.0, rotation: number = 0, alpha: number = 1.0) {
-        let image = this.spriteBuffer.get(sprite);
-        if (alpha < 1.0) {
-            this.p.tint(255, alpha * 255);
-        }
-        this.p.image(image, x, y, image.width * size, image.height * size);
-        if (alpha < 1.0) {
-            this.p.tint(255, 255);
-        }
-    }
 }
 
 export class AudioEngine {

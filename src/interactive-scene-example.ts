@@ -1,6 +1,7 @@
 import {RenderContext, AudioEngine} from "./scene-player";
 import {Scene, SceneUpdate} from "./scene";
 import {Evt} from "./event";
+import {Sprite} from "./sprite";
 
 export class InteractiveSceneExample extends Scene {
     private x: number = 1;
@@ -24,7 +25,7 @@ export class InteractiveSceneExample extends Scene {
             }
         }
 
-        renderContext.renderSprite("assets/cat.png", this.x, this.y, 0.2);
+        new Sprite("assets/cat.png", this.x, this.y, 0.2).draw(renderContext);
 
         return SceneUpdate.empty();
     }
