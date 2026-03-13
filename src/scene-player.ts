@@ -194,7 +194,18 @@ export class ScenePlayer {
     }
 
     update() {
-        if (!this.loaded || !this.initialized || !this.currentScene) return;
+        if (!this.loaded || !this.initialized || !this.currentScene) {
+            this.p.background(220);
+            this.p.textAlign(this.p.CENTER);
+            this.p.textSize(42);
+            this.p.fill(0);
+            if (!this.loaded) {
+                this.p.text('Bilder werden geladen...', this.p.width / 2, this.p.height / 2);
+            } else if (!this.initialized) {
+                this.p.text('Zum Starten Klicken ;)', this.p.width / 2, this.p.height / 2);
+            }
+            return;
+        }
 
         const globalTime = this.audioCtx.currentTime;
         const currentSceneTime = this.currentTime(globalTime);
