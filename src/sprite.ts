@@ -63,6 +63,7 @@ export class Sprite {
                 p.tint(255, this.alpha * 255);
             p.translate(this.x, this.y);
             p.rotate(this.rotation);
+            p.imageMode(p.CENTER);
             p.image(image, 0, 0, image.width * this.size, image.height * this.size);
             p.pop();
         } else {
