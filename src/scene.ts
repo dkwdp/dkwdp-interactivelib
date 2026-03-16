@@ -1,18 +1,54 @@
-import {Audio} from "./audio";
-import {AudioEngine, RenderContext} from "./scene-player";
+import {Audio, AudioPlayer, AudioBuf, SpriteBuffer} from "./media";
 import {Evt} from "./event";
+import p5 from "p5";
 
-export class SceneUpdate {
-    audios: Audio[];
+export class Context {
+    readonly time: number;
+    readonly globalTime: number;
+    readonly p: p5;
+    readonly spriteBuffer: SpriteBuffer;
+    readonly events: Evt[];
+
+    // noinspection JSMismatchedCollectionQueryUpdate
+    private readonly audioPlayers: AudioPlayer[];
+    private readonly audioBuffer: AudioBuf;
+    private readonly _audios: Audio[];
+
     nextScene: string | null;
 
-    constructor(audios: Audio[], nextScene: string | null = null) {
-        this.audios = audios;
-        this.nextScene = nextScene;
+    constructor(time: number, globalTime: number, p: p5, spriteBuffer: SpriteBuffer, audioPlayers: AudioPlayer[], audioBuffer: AudioBuf, events: Evt[]) {
+        this.time = time;
+        this.globalTime = globalTime;
+        this.p = p;
+        this.spriteBuffer = spriteBuffer;
+        this.audioPlayers = audioPlayers;
+        this.audioBuffer = audioBuffer;
+        this.events = events;
+        this._audios = [];
+        this.nextScene = null;
     }
 
-    static empty(): SceneUpdate {
-        return new SceneUpdate([], null);
+    /**
+     * Plays an audio file at the given offset.
+     * @param filename The filename of the audio file to play.
+     * @param offset The offset in seconds how much audio should be skipped at the start of the audiofile.
+     * @param controlled If false, the audio will be played and will continue to play until the end of the audiofile.
+     * If true, the audio will be played only one frame, and only continued, if playAudio() is called again with the same filename and the offset + delta time.
+     */
+    playAudio(filename: string, offset: number = 0, controlled: boolean = false) {
+        if (!controlled) {
+            const source = this.audioBuffer.get(filename);
+            if (!source) throw new Error(`Audio file not found: ${filename}`);
+            const player = source.createPlayer();
+            player.play(offset, this.globalTime);
+            this.audioPlayers.push(player);
+        } else {
+            this._audios.push(new Audio(filename, offset));
+        }
+    }
+
+    get audios(): Audio[] {
+        return this._audios;
     }
 }
 
@@ -20,22 +56,16 @@ export abstract class Scene {
     /**
      * Initializes the application with the specified time, render context, and audio engine.
      *
-     * @param renderContext - The rendering context to be used for rendering graphics.
-     * @param audioEngine - The audio engine instance used for managing sound and music playback.
+     * @param context - The context containing rendering helpers and audio playback.
      */
-    init(renderContext: RenderContext, audioEngine: AudioEngine): void {}
+    init(context: Context): void {}
 
     // TODO: return void. And add Audios[] interface to AudioEngine. Add nextScene to EventManager
     /**
      * Creates a Render object that shows the current state at the given time.
-     * @param time A timestamp in seconds. Starts at 0 and increases up to duration()
-     * @param renderContext Context holding the p5 instance used for rendering and the sprite buffer.
-     * @param audioEngine Audio engine used for playing audio.
-     * @param events List of events that occurred in the last frame.
-     * @returns A list of audios, where each file includes a predefined seek point.
-     * Upon activation, the player skips the initial audio data and begins playback directly from the specified timestamp.
+     * @param context The context used for timing, rendering, audio playback and scene changes.
      */
-    abstract update(time: number, renderContext: RenderContext, audioEngine: AudioEngine, events: Evt[]): SceneUpdate;
+    abstract update(context: Context): void;
 
     /**
      * Returns the duration of the scene in seconds. If the duration is not defined or can vary, return -1.

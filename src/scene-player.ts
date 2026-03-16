@@ -1,109 +1,16 @@
-import {Audio, AudioFile, AudioPlayer} from "./audio";
+import {Audio, AudioPlayer, SpriteBuffer, AudioBuf} from "./media";
 import p5 from "p5";
-import {Scene} from "./scene";
+import {Context, Scene} from "./scene";
 import {DkwdpKeyboardEvent, DkwdpMouseEvent, DkwdpMouseMoveEvent, DkwdpMouseWheelEvent, Evt} from "./event";
 
 const MAX_TIME_EPSILON = 0.001;
 
-export class AudioBuffer {
-    private audios: Map<string, AudioFile>;
-
-    constructor() {
-        this.audios = new Map();
-    }
-
-    /**
-     * Loads the given audios.
-     * @param audios An array of audios, given as tuple [name, filename]. The name is a unique identifier for the audio.
-     * @param audioCtx The AudioContext to use for playback.
-     * The filename is the path to the audio file.
-     */
-    async load(audios: string[], audioCtx: AudioContext) {
-        for (const filename of audios) {
-            const audio = new AudioFile(filename, audioCtx);
-            await audio.load();
-            this.audios.set(filename, audio);
-        }
-    }
-
-    /**
-     * Returns the audio segment with the given name.
-     * @param audio The name of the audio.
-     * @returns The audio
-     */
-    get(audio: string): AudioFile {
-        const result = this.audios.get(audio);
-        if (!result)
-            throw new Error(`Audio segment not found: ${audio}`);
-        return result;
-    }
-}
-
-export class SpriteBuffer {
-    private sprites: Map<string, p5.Image>
-
-    constructor() {
-        this.sprites = new Map();
-    }
-
-    /**
-     * Loads a set of sprite images and stores them in the sprites map.
-     *
-     * @param sprites - An array of file paths to the sprite images.
-     * @param p - An instance of the p5 library used to load the images.
-     * @return A promise that resolves once all images are loaded and stored.
-     */
-    async load(sprites: string[], p: p5) {
-        for (const filename of sprites) {
-            const sprite = await p.loadImage(filename);
-            this.sprites.set(filename, sprite);
-        }
-    }
-
-    get(sprite: string): p5.Image {
-        const result = this.sprites.get(sprite) || null;
-        if (!result)
-            throw new Error(`Sprite not found: ${sprite}`);
-        return result;
-    }
-}
-
-export class RenderContext {
-    p: p5;
-    spriteBuffer: SpriteBuffer;
-
-    constructor(p: p5, spriteBuffer: SpriteBuffer) {
-        this.p = p;
-        this.spriteBuffer = spriteBuffer;
-    }
-}
-
-export class AudioEngine {
-    // noinspection JSMismatchedCollectionQueryUpdate
-    private readonly audioPlayers: AudioPlayer[];
-    private readonly audioBuffer: AudioBuffer;
-    private readonly globalTime: number;
-
-    constructor(audioPlayers: AudioPlayer[], audioBuffer: AudioBuffer, globalTime: number) {
-        this.audioPlayers = audioPlayers;
-        this.audioBuffer = audioBuffer;
-        this.globalTime = globalTime;
-    }
-
-    playAudio(filename: string, offset: number = 0) {
-        const source = this.audioBuffer.get(filename);
-        if (!source) throw new Error(`Audio file not found: ${filename}`);
-        const player = source.createPlayer();
-        player.play(offset, this.globalTime);
-        this.audioPlayers.push(player);
-    }
-}
 
 export class ScenePlayer {
     private readonly p: p5;
     private readonly sceneBuffer: Map<string, Scene>;
     private readonly startScene: string;
-    private readonly audioBuffer: AudioBuffer;
+    private readonly audioBuffer: AudioBuf;
     private readonly spriteBuffer: SpriteBuffer;
     private readonly audioCtx: AudioContext;
     private loaded: boolean = false;
@@ -125,7 +32,7 @@ export class ScenePlayer {
         this.p = p;
         this.sceneBuffer = sceneBuffer;
         this.startScene = startScene;
-        this.audioBuffer = new AudioBuffer();
+        this.audioBuffer = new AudioBuf();
         this.spriteBuffer = new SpriteBuffer();
         this.audioCtx = new window.AudioContext();
         this.currentAudioPlayers = new Map();
@@ -169,14 +76,18 @@ export class ScenePlayer {
         });
     }
 
+    createContext(): Context {
+        const globalTime = this.audioCtx.currentTime;
+        const currentSceneTime = this.currentTime(globalTime);
+        return new Context(currentSceneTime, globalTime, this.p, this.spriteBuffer, this.spontaneousAudioPlayers, this.audioBuffer, this.events);
+    }
+
     setScene(scene: Scene) {
         if (!scene) throw new Error(`Scene is ${scene} but should be a Scene`);
         this.currentScene = scene;
-        this.currentSceneStartTime = this.audioCtx.currentTime;
-        this.currentScene.init(
-            new RenderContext(this.p, this.spriteBuffer),
-            new AudioEngine(this.spontaneousAudioPlayers, this.audioBuffer, this.audioCtx.currentTime),
-        )
+        const context = this.createContext();
+        this.currentSceneStartTime = context.globalTime;
+        this.currentScene.init(context);
     }
 
     play() {
@@ -195,31 +106,29 @@ export class ScenePlayer {
 
     update() {
         if (!this.loaded || !this.initialized || !this.currentScene) {
-            this.p.background(220);
-            this.p.textAlign(this.p.CENTER);
-            this.p.textSize(42);
-            this.p.fill(0);
-            if (!this.loaded) {
-                this.p.text('Bilder werden geladen...', this.p.width / 2, this.p.height / 2);
-            } else if (!this.initialized) {
-                this.p.text('Zum Starten Klicken ;)', this.p.width / 2, this.p.height / 2);
-            }
+            this.renderStartScreen();
             return;
         }
 
-        const globalTime = this.audioCtx.currentTime;
-        const currentSceneTime = this.currentTime(globalTime);
-        const update = this.currentScene!.update(
-            currentSceneTime,
-            new RenderContext(this.p, this.spriteBuffer),
-            new AudioEngine(this.spontaneousAudioPlayers, this.audioBuffer, globalTime),
-            this.events
-        );
+        const context = this.createContext();
+        this.currentScene!.update(context);
 
         this.events = [];
 
-        this.handleAudio(update.audios, globalTime);
-        this.handleNextScene(update.nextScene);
+        this.handleAudio(context.audios, context.globalTime);
+        this.handleNextScene(context.nextScene);
+    }
+
+    private renderStartScreen() {
+        this.p.background(220);
+        this.p.textAlign(this.p.CENTER);
+        this.p.textSize(42);
+        this.p.fill(0);
+        if (!this.loaded) {
+            this.p.text('Bilder werden geladen...', this.p.width / 2, this.p.height / 2);
+        } else if (!this.initialized) {
+            this.p.text('Zum Starten Klicken ;)', this.p.width / 2, this.p.height / 2);
+        }
     }
 
     handleNextScene(nextScene: string | null) {

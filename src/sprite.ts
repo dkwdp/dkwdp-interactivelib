@@ -1,4 +1,4 @@
-import {RenderContext} from "./scene-player";
+import {Context} from "./scene";
 
 export class Sprite {
     filename: string;
@@ -21,9 +21,9 @@ export class Sprite {
         this.alpha = alpha;
     }
 
-    touches(x: number, y: number, renderContext: RenderContext): boolean {
+    touches(x: number, y: number, context: Context): boolean {
         // TODO: respect rotation
-        const image = renderContext.spriteBuffer.get(this.filename);
+        const image = context.spriteBuffer.get(this.filename);
         if (!image) {
             console.error(`Sprite image not found: ${this.filename}`);
             return false;
@@ -45,7 +45,7 @@ export class Sprite {
                 const pixelColor = image.get(pixelX, pixelY);
 
                 // Check alpha channel (index 3 in RGBA array)
-                const alpha = renderContext.p.alpha(pixelColor);
+                const alpha = context.p.alpha(pixelColor);
 
                 // Return true if pixel is not transparent (alpha > threshold)
                 return alpha > 128;
@@ -54,9 +54,9 @@ export class Sprite {
         return false;
     }
 
-    draw(renderContext: RenderContext) {
-        const p = renderContext.p;
-        const image = renderContext.spriteBuffer.get(this.filename);
+    draw(context: Context) {
+        const p = context.p;
+        const image = context.spriteBuffer.get(this.filename);
         if (image) {
             p.push();
             if (this.alpha < 1.0)
