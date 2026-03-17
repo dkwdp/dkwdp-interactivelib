@@ -1,6 +1,7 @@
 import {Audio, AudioPlayer, AudioBuf, SpriteBuffer} from "./media";
 import {Evt} from "./event";
 import p5 from "p5";
+import {CoordinateSystem} from "./coordinates";
 
 export class Context {
     readonly time: number;
@@ -8,6 +9,7 @@ export class Context {
     readonly p: p5;
     readonly spriteBuffer: SpriteBuffer;
     readonly events: Evt[];
+    readonly coordinates: CoordinateSystem;
 
     // noinspection JSMismatchedCollectionQueryUpdate
     private readonly audioPlayers: AudioPlayer[];
@@ -16,7 +18,7 @@ export class Context {
 
     nextScene: string | null;
 
-    constructor(time: number, globalTime: number, p: p5, spriteBuffer: SpriteBuffer, audioPlayers: AudioPlayer[], audioBuffer: AudioBuf, events: Evt[]) {
+    constructor(time: number, globalTime: number, p: p5, spriteBuffer: SpriteBuffer, audioPlayers: AudioPlayer[], audioBuffer: AudioBuf, events: Evt[], coordinates: CoordinateSystem) {
         this.time = time;
         this.globalTime = globalTime;
         this.p = p;
@@ -24,6 +26,7 @@ export class Context {
         this.audioPlayers = audioPlayers;
         this.audioBuffer = audioBuffer;
         this.events = events;
+        this.coordinates = coordinates;
         this._audios = [];
         this.nextScene = null;
     }

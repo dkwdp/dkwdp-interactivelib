@@ -1,4 +1,11 @@
 import {Context} from "./scene";
+import p5 from "p5";
+
+/**
+ * If a single number is provided, it represents the height in dkwdp-coordinates.
+ * If an array of two numbers is provided, it represents the width and height in dkwdp-coordinates.
+ */
+export type SpriteSize = number | [number, number];
 
 export class Sprite {
     filename: string;
@@ -7,12 +14,12 @@ export class Sprite {
     x: number;
     y: number;
 
-    /** The relative size of the sprite. TODO: change to relative size in coordinate system */
-    size: number;
+    /** The absolute size of the sprite in dkwdp-coordinates. */
+    size: SpriteSize;
     rotation: number;
     alpha: number; // alpha between 0 and 1
 
-    constructor(filename: string, x: number, y: number, size: number = 1.0, rotation: number = 0, alpha: number = 1.0) {
+    constructor(filename: string, x: number, y: number, size: SpriteSize = 3.0, rotation: number = 0, alpha: number = 1.0) {
         this.filename = filename;
         this.x = x;
         this.y = y;
@@ -28,8 +35,11 @@ export class Sprite {
             console.error(`Sprite image not found: ${this.filename}`);
             return false;
         }
-        const width = image.width * this.size;
-        const height = image.height * this.size;
+        // const width = image.width * this.size;
+        // const height = image.height * this.size;
+        // TODO: rework this
+        const width = image.width;
+        const height = image.height;
 
         if (this.x - width / 2 <= x && this.x + width / 2 >= x && this.y - height / 2 <= y && this.y + height / 2 >= y) {
             if (image) {
@@ -54,6 +64,15 @@ export class Sprite {
         return false;
     }
 
+    getImageSize(image: p5.Image): [number, number] {
+        if (typeof this.size === 'number') {
+            const aspectRatio = image.width / image.height;
+            return [this.size * aspectRatio, this.size];
+        } else {
+            return this.size;
+        }
+    }
+
     draw(context: Context) {
         const p = context.p;
         const image = context.spriteBuffer.get(this.filename);
@@ -64,7 +83,8 @@ export class Sprite {
             p.translate(this.x, this.y);
             p.rotate(this.rotation);
             p.imageMode(p.CENTER);
-            p.image(image, 0, 0, image.width * this.size, image.height * this.size);
+            const [w, h] = this.getImageSize(image);
+            p.image(image, 0, 0, w, h);
             p.pop();
         } else {
             console.error(`Sprite image not found: ${this.filename}`);

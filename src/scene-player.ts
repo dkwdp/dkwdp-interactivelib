@@ -2,6 +2,7 @@ import {Audio, AudioPlayer, SpriteBuffer, AudioBuf} from "./media";
 import p5 from "p5";
 import {Context, Scene} from "./scene";
 import {DkwdpKeyboardEvent, DkwdpMouseEvent, DkwdpMouseMoveEvent, DkwdpMouseWheelEvent, Evt} from "./event";
+import {CoordinateSystem} from "./coordinates";
 
 const MAX_TIME_EPSILON = 0.001;
 
@@ -23,6 +24,7 @@ export class ScenePlayer {
     private currentAudioPlayers: Map<string, AudioPlayer>;
     private spontaneousAudioPlayers: AudioPlayer[];
 
+    private coordinateSystem: CoordinateSystem;
     private events: Evt[] = [];
 
     private lastMouseX: number = NaN;
@@ -37,6 +39,7 @@ export class ScenePlayer {
         this.audioCtx = new window.AudioContext();
         this.currentAudioPlayers = new Map();
         this.spontaneousAudioPlayers = [];
+        this.coordinateSystem = new CoordinateSystem();
     }
 
     /**
@@ -51,6 +54,8 @@ export class ScenePlayer {
         await this.audioBuffer.load(audios, this.audioCtx);
         await this.spriteBuffer.load(sprites, this.p);
         this.loaded = true;
+
+        this.coordinateSystem = CoordinateSystem.default(this.p.width, this.p.height);
 
         // keyboard events
         this.p.keyPressed = () => { this.keyPressed(); };
@@ -79,7 +84,7 @@ export class ScenePlayer {
     createContext(): Context {
         const globalTime = this.audioCtx.currentTime;
         const currentSceneTime = this.currentTime(globalTime);
-        return new Context(currentSceneTime, globalTime, this.p, this.spriteBuffer, this.spontaneousAudioPlayers, this.audioBuffer, this.events);
+        return new Context(currentSceneTime, globalTime, this.p, this.spriteBuffer, this.spontaneousAudioPlayers, this.audioBuffer, this.events, this.coordinateSystem);
     }
 
     setScene(scene: Scene) {
@@ -109,6 +114,8 @@ export class ScenePlayer {
             this.renderStartScreen();
             return;
         }
+
+        this.coordinateSystem.use(this.p);
 
         const context = this.createContext();
         this.currentScene!.update(context);
