@@ -1,5 +1,6 @@
-import {Context} from "./scene";
+import {Context} from "./context";
 import p5 from "p5";
+import {InteractiveElement} from "./elements/element";
 
 /**
  * If a single number is provided, it represents the height in dkwdp-coordinates.
@@ -7,7 +8,7 @@ import p5 from "p5";
  */
 export type SpriteSize = number | [number, number];
 
-export class Sprite {
+export class Sprite implements InteractiveElement {
     filename: string;
 
     // TODO: change to coordinate system
@@ -27,6 +28,8 @@ export class Sprite {
         this.rotation = rotation;
         this.alpha = alpha;
     }
+
+    update(context: Context) {}
 
     touches(x: number, y: number, context: Context): boolean {
         // TODO: respect rotation
@@ -55,7 +58,7 @@ export class Sprite {
                 const pixelColor = image.get(pixelX, pixelY);
 
                 // Check alpha channel (index 3 in RGBA array)
-                const alpha = context.p.alpha(pixelColor);
+                const alpha = context.alpha(pixelColor);
 
                 // Return true if pixel is not transparent (alpha > threshold)
                 return alpha > 128;
@@ -74,18 +77,18 @@ export class Sprite {
     }
 
     draw(context: Context) {
-        const p = context.p;
         const image = context.spriteBuffer.get(this.filename);
         if (image) {
-            p.push();
+            context.push();
             if (this.alpha < 1.0)
-                p.tint(255, this.alpha * 255);
-            p.translate(this.x, this.y);
-            p.rotate(this.rotation);
-            p.imageMode(p.CENTER);
+                context.tint(255, this.alpha * 255);
+            // we flip y position here
+            context.translate(this.x, this.y);
+            context.rotate(this.rotation);
+            context.imageMode(context.CENTER);
             const [w, h] = this.getImageSize(image);
-            p.image(image, 0, 0, w, h);
-            p.pop();
+            context.image(image, 0, 0, w, h);
+            context.pop();
         } else {
             console.error(`Sprite image not found: ${this.filename}`);
         }

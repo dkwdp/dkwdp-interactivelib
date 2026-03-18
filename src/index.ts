@@ -5,6 +5,7 @@ import {ScenePlayer} from "./scene-player";
 export * from "./scene-player";
 export * from "./scene";
 export * from "./sprite";
+export * from "./context";
 
 export function initScenes(sceneBuffer: [string, Scene][], audioAssets: string[], imageAssets: string[], width: number = 1920, height: number = 1080) {
     new p5((p) => {

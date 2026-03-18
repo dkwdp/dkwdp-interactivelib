@@ -1,8 +1,9 @@
-import {Audio, AudioPlayer, SpriteBuffer, AudioBuf} from "./media";
 import p5 from "p5";
-import {Context, Scene} from "./scene";
+import {Audio, AudioPlayer, SpriteBuffer, AudioBuf} from "./media";
+import {Scene} from "./scene";
 import {DkwdpKeyboardEvent, DkwdpMouseEvent, DkwdpMouseMoveEvent, DkwdpMouseWheelEvent, Evt} from "./event";
 import {CoordinateSystem} from "./coordinates";
+import {Context} from "./context";
 
 const MAX_TIME_EPSILON = 0.001;
 
