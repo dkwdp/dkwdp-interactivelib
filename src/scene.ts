@@ -12,7 +12,7 @@ export class Context {
     readonly coordinates: CoordinateSystem;
 
     // noinspection JSMismatchedCollectionQueryUpdate
-    private readonly audioPlayers: AudioPlayer[];
+    private readonly detachedAudioPlayers: AudioPlayer[];
     private readonly audioBuffer: AudioBuf;
     private readonly _audios: Audio[];
 
@@ -23,7 +23,7 @@ export class Context {
         this.globalTime = globalTime;
         this.p = p;
         this.spriteBuffer = spriteBuffer;
-        this.audioPlayers = audioPlayers;
+        this.detachedAudioPlayers = audioPlayers;
         this.audioBuffer = audioBuffer;
         this.events = events;
         this.coordinates = coordinates;
@@ -44,7 +44,7 @@ export class Context {
             if (!source) throw new Error(`Audio file not found: ${filename}`);
             const player = source.createPlayer();
             player.play(offset, this.globalTime);
-            this.audioPlayers.push(player);
+            this.detachedAudioPlayers.push(player);
         } else {
             this._audios.push(new Audio(filename, offset));
         }

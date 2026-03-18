@@ -21,8 +21,8 @@ export class ScenePlayer {
     /* The timepoint when the currentAnimationScene was started in the time system of the audioCtx */
     private currentSceneStartTime: number = 0;
 
-    private currentAudioPlayers: Map<string, AudioPlayer>;
-    private spontaneousAudioPlayers: AudioPlayer[];
+    private controlledAudioPlayers: Map<string, AudioPlayer>;
+    private detachedAudioPlayers: AudioPlayer[];
 
     private coordinateSystem: CoordinateSystem;
     private events: Evt[] = [];
@@ -37,8 +37,8 @@ export class ScenePlayer {
         this.audioBuffer = new AudioBuf();
         this.spriteBuffer = new SpriteBuffer();
         this.audioCtx = new window.AudioContext();
-        this.currentAudioPlayers = new Map();
-        this.spontaneousAudioPlayers = [];
+        this.controlledAudioPlayers = new Map();
+        this.detachedAudioPlayers = [];
         this.coordinateSystem = new CoordinateSystem();
     }
 
@@ -84,7 +84,7 @@ export class ScenePlayer {
     createContext(): Context {
         const globalTime = this.audioCtx.currentTime;
         const currentSceneTime = this.currentTime(globalTime);
-        return new Context(currentSceneTime, globalTime, this.p, this.spriteBuffer, this.spontaneousAudioPlayers, this.audioBuffer, this.events, this.coordinateSystem);
+        return new Context(currentSceneTime, globalTime, this.p, this.spriteBuffer, this.detachedAudioPlayers, this.audioBuffer, this.events, this.coordinateSystem);
     }
 
     setScene(scene: Scene) {
@@ -153,13 +153,13 @@ export class ScenePlayer {
         // handle current audio players
         const usedPlayers = new Map<string, AudioPlayer>();
         for (const audio of audios) {
-            const player = this.currentAudioPlayers.get(audio.filename);
+            const player = this.controlledAudioPlayers.get(audio.filename);
             let newPlayerNeeded = true;
             if (player) {
                 // remove player, if too far off
                 if (Math.abs(player.getPosition(globalTime) - audio.time) > MAX_TIME_EPSILON) {
                     player.stop();
-                    this.currentAudioPlayers.delete(audio.filename);
+                    this.controlledAudioPlayers.delete(audio.filename);
                 } else {
                     newPlayerNeeded = false;
                     usedPlayers.set(audio.filename, player);
@@ -170,34 +170,34 @@ export class ScenePlayer {
                 if (audio.isValid(source.duration())) {
                     const player = source.createPlayer();
                     player.play(audio.time, globalTime);
-                    this.currentAudioPlayers.set(audio.filename, player);
+                    this.controlledAudioPlayers.set(audio.filename, player);
                     usedPlayers.set(audio.filename, player);
                 }
             }
         }
 
         // Stop unused players
-        for (const [filename, player] of this.currentAudioPlayers) {
+        for (const [filename, player] of this.controlledAudioPlayers) {
             if (!usedPlayers.has(filename)) {
                 player.stop();
             }
         }
-        this.currentAudioPlayers = usedPlayers;
+        this.controlledAudioPlayers = usedPlayers;
 
         // handle spontaneous audio players
-        this.spontaneousAudioPlayers = this.spontaneousAudioPlayers.filter(player => player.playing);
+        this.detachedAudioPlayers = this.detachedAudioPlayers.filter(player => player.playing);
     }
 
     resetAudio() {
-        for (const player of this.currentAudioPlayers.values()) {
+        for (const player of this.controlledAudioPlayers.values()) {
             player.stop();
         }
-        this.currentAudioPlayers.clear();
+        this.controlledAudioPlayers.clear();
 
-        for (const player of this.spontaneousAudioPlayers) {
+        for (const player of this.detachedAudioPlayers) {
             player.stop();
         }
-        this.spontaneousAudioPlayers = [];
+        this.detachedAudioPlayers = [];
     }
 
     // keyboard events
