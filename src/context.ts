@@ -22,6 +22,11 @@ export class Context {
     readonly CENTER: "center" = "center";
     readonly CORNERS: "corners" = "corners";
     readonly RADIUS: "radius" = "radius";
+    readonly LEFT: "left" = "left";
+    readonly RIGHT: "right" = "right";
+    readonly TOP: "top" = "top";
+    readonly BOTTOM: "bottom" = "bottom";
+    readonly CLOSE: "close" = "close";
 
     constructor(time: number, globalTime: number, p: p5, spriteBuffer: SpriteBuffer, audioPlayers: AudioPlayer[], audioBuffer: AudioBuf, events: Evt[], coordinates: CoordinateSystem) {
         this.time = time;
@@ -34,11 +39,6 @@ export class Context {
         this.coordinates = coordinates;
         this._audios = [];
         this.nextScene = null;
-
-        this.CORNER = p.CORNER;
-        this.CENTER = p.CENTER;
-        this.CORNERS = p.CORNERS;
-        this.RADIUS = p.RADIUS;
     }
 
     /**
@@ -168,5 +168,43 @@ export class Context {
         if (g === null) g = r;
         if (b === null) b = r;
         this.p.fill(r, g, b, a);
+    }
+
+    rect(x: number, y: number, w: number, h: number) {
+        this.p.rect(x, -y, w, h);
+    }
+
+    circle(x: number, y: number, r: number) {
+        this.p.circle(x, -y, r);
+    }
+
+    noFill() {
+        this.p.noFill();
+    }
+
+    stroke(color: number, g: number | null = null, b: number | null = null, a: number = 255) {
+        if (g === null) g = color;
+        if (b === null) b = color;
+        this.p.stroke(color, g, b, a);
+    }
+
+    strokeWeight(weight: number) {
+        this.p.strokeWeight(weight);
+    }
+
+    rectMode(mode: "corner" | "center" | "corners" | "radius") {
+        this.p.rectMode(mode);
+    }
+
+    beginShape(beginKind?: 0 | 1 | 4 | 6 | 5 | "quads" | "quad_strip" | 8) {
+        this.p.beginShape(beginKind);
+    }
+
+    endShape(endKind?: "close", count?: number) {
+        this.p.endShape(endKind, count);
+    }
+
+    vertex(x: number, y: number) {
+        this.p.vertex(x, -y);
     }
 }
