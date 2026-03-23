@@ -70,8 +70,8 @@ export class Sprite implements InteractiveElement {
             const [xRel, yRel] = collisionRect.pointInRectRelative(x, y);
 
             // Map to pixel coordinates in the image
-            const pixelX = Math.floor(xRel * width);
-            const pixelY = Math.floor(yRel * height);
+            const pixelX = Math.floor(xRel * image.width);
+            const pixelY = Math.floor(yRel * image.height);
 
             // Get pixel color at the position
             const pixelColor = image.get(pixelX, pixelY);
