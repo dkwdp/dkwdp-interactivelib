@@ -6,7 +6,7 @@ import {CoordinateSystem} from "./coordinates";
 export class Context {
     readonly time: number;
     readonly globalTime: number;
-    private readonly p: p5;
+    readonly p: p5;
     readonly spriteBuffer: SpriteBuffer;
     readonly events: Evt[];
     readonly coordinates: CoordinateSystem;

@@ -7,13 +7,14 @@ export * from "./scene";
 export * from "./sprite";
 export * from "./context";
 
-export function initScenes(sceneBuffer: [string, Scene][], audioAssets: string[], imageAssets: string[], width: number = 1920, height: number = 1080) {
+export function initScenes(sceneBuffer: [string, Scene][], audioAssets: string[], imageAssets: string[]) {
     new p5((p) => {
         const sceneBufferMap = new Map<string, Scene>(sceneBuffer);
-        let scenePlayer = new ScenePlayer(p, sceneBufferMap, sceneBuffer[0][0]);
+        let scenePlayer: ScenePlayer;
 
         p.setup = () => {
-            p.createCanvas(width, height).parent('sketch-holder');
+            p.createCanvas().parent('sketch-holder');
+            scenePlayer = new ScenePlayer(p, sceneBufferMap, sceneBuffer[0][0]);
             scenePlayer.load(audioAssets, imageAssets).then(() => {});
         };
 

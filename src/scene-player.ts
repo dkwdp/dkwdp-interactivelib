@@ -6,6 +6,7 @@ import {CoordinateSystem} from "./coordinates";
 import {Context} from "./context";
 
 const MAX_TIME_EPSILON = 0.001;
+const TARGET_ASPECT_RATIO = 16 / 9;
 
 
 export class ScenePlayer {
@@ -26,6 +27,7 @@ export class ScenePlayer {
     private detachedAudioPlayers: AudioPlayer[];
 
     private coordinateSystem: CoordinateSystem;
+    private lastScreenDimensions: [number, number] = [0, 0];
     private events: Evt[] = [];
 
     private lastMouseX: number = NaN;
@@ -56,7 +58,7 @@ export class ScenePlayer {
         await this.spriteBuffer.load(sprites, this.p);
         this.loaded = true;
 
-        this.coordinateSystem = CoordinateSystem.default(this.p.width, this.p.height);
+        this.updateCoordinateSystem();
 
         // keyboard events
         this.p.keyPressed = () => { this.keyPressed(); };
@@ -80,6 +82,24 @@ export class ScenePlayer {
         window.addEventListener('contextmenu', (event: MouseEvent) => {
             event.preventDefault();
         });
+    }
+
+    updateCoordinateSystem() {
+        let [w, h] = [this.p.windowWidth, this.p.windowHeight];
+        if (w !== this.lastScreenDimensions[0] || h !== this.lastScreenDimensions[1]) {
+            // calculate dimensions for fixed aspect ratio
+            const aspectRatio = w / h;
+            if (Math.abs(aspectRatio - TARGET_ASPECT_RATIO) > 0.0001) {
+                if (aspectRatio > TARGET_ASPECT_RATIO) {
+                    w = h * TARGET_ASPECT_RATIO;
+                } else {
+                    h = w / TARGET_ASPECT_RATIO;
+                }
+            }
+            this.coordinateSystem = CoordinateSystem.default(w, h);
+            this.p.resizeCanvas(w, h);
+            this.lastScreenDimensions = [this.p.windowWidth, this.p.windowHeight];
+        }
     }
 
     createContext(): Context {
@@ -116,6 +136,7 @@ export class ScenePlayer {
             return;
         }
 
+        this.updateCoordinateSystem();
         this.coordinateSystem.use(this.p);
 
         const context = this.createContext();
@@ -133,9 +154,13 @@ export class ScenePlayer {
         this.p.textSize(42);
         this.p.fill(0);
         if (!this.loaded) {
-            this.p.text('Bilder werden geladen...', this.p.width / 2, this.p.height / 2);
+            if (this.p.width !== undefined && this.p.height !== undefined) {
+                this.p.text('Bilder werden geladen...', this.p.width / 2, this.p.height / 2);
+            }
         } else if (!this.initialized) {
-            this.p.text('Zum Starten Klicken ;)', this.p.width / 2, this.p.height / 2);
+            if (this.p.width !== undefined && this.p.height !== undefined) {
+                this.p.text('Zum Starten Klicken ;)', this.p.width / 2, this.p.height / 2);
+            }
         }
     }
 
