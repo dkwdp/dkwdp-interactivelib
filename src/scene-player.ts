@@ -140,7 +140,7 @@ export class ScenePlayer {
         this.coordinateSystem.use(this.p);
 
         const context = this.createContext();
-        this.currentScene!.update(context);
+        this.currentScene!.call(context);
 
         this.events = [];
 
