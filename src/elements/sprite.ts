@@ -9,10 +9,10 @@ import {Rect} from "../collision";
  */
 export type SpriteSize = number | [number, number];
 export interface SpriteParams {
-    size: SpriteSize;
-    rotation: number;
-    alpha: number;
-    imageMode: "corner" | "center" | "corners";
+    size?: SpriteSize;
+    rotation?: number;
+    alpha?: number;
+    imageMode?: "corner" | "center" | "corners";
 }
 
 export class Sprite implements InteractiveElement {
@@ -42,7 +42,7 @@ export class Sprite implements InteractiveElement {
      */
     imageMode: "corner" | "center" | "corners";
 
-    constructor(filename: string, x: number, y: number, {size = 3.0, rotation = 0, alpha = 1.0, imageMode = "center"}: SpriteParams) {
+    constructor(filename: string, x: number, y: number, {size = 3.0, rotation = 0, alpha = 1.0, imageMode = "center"}: SpriteParams = {}) {
         this.filename = filename;
         this.x = x;
         this.y = y;
