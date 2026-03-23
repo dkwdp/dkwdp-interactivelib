@@ -329,8 +329,8 @@ export class ScenePlayer {
         }
         this.events.push(evt);
 
-        this.lastMouseX = this.p.mouseX;
-        this.lastMouseY = this.p.mouseY;
+        this.lastMouseX = x;
+        this.lastMouseY = y;
     }
 
     mouseWheel(event: WheelEvent) {
