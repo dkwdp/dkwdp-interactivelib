@@ -26,9 +26,9 @@ export class CoordinateSystem {
      */
     static default(width: number, height: number): CoordinateSystem {
         const cs = new CoordinateSystem();
-        const xScale = width / (2 * DEFAULT_MAX_X);
-        const yScale = height / (2 * DEFAULT_MAX_X * 9 / 16);
-        cs.set(xScale, 0, 0, yScale, DEFAULT_MAX_X * xScale,  DEFAULT_MAX_X * (9 / 16) * yScale);
+        const xScale = (2 * DEFAULT_MAX_X) / width;
+        const yScale = (2 * DEFAULT_MAX_X * 9 / 16) / height;
+        cs.set(xScale, 0, 0, yScale, -DEFAULT_MAX_X,  -DEFAULT_MAX_X * 9 / 16);
         return cs;
     }
 
@@ -80,7 +80,8 @@ export class CoordinateSystem {
      */
     use(p: p5) {
         p.resetMatrix();
-        p.applyMatrix(this.transform);
+        const [invX, invY] = [1 / this.transform[0], 1 / this.transform[3]];
+        p.applyMatrix(invX, this.transform[1], this.transform[2], invY, -this.transform[4] * invX, -this.transform[5] * invY);
     }
 
     /**

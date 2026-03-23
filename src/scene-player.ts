@@ -250,11 +250,12 @@ export class ScenePlayer {
     mouseReleased(event: MouseEvent) {
         if (!this.initialized) return;
         const timestamp = this.currentTime(this.audioCtx.currentTime);
+        const [x, y] = this.getMousePosition();
         const evt: DkwdpMouseEvent = {
             kind: 'mouseup',
             timestamp: timestamp,
-            x: this.p.mouseX,
-            y: this.p.mouseY,
+            x,
+            y,
             button: event.button,
         }
         this.events.push(evt);
@@ -263,27 +264,29 @@ export class ScenePlayer {
     mousePressed(event: MouseEvent) {
         if (!this.initialized) return;
         const timestamp = this.currentTime(this.audioCtx.currentTime);
+        const [x, y] = this.getMousePosition();
         const evt: DkwdpMouseEvent = {
             kind: 'mousedown',
             timestamp: timestamp,
-            x: this.p.mouseX,
-            y: this.p.mouseY,
+            x,
+            y,
             button: event.button,
         }
         this.events.push(evt);
     }
 
     mouseMovement(): [number, number] {
+        const [x, y] = this.getMousePosition();
         if (Number.isNaN(this.lastMouseX) || Number.isNaN(this.lastMouseY)) {
-            this.lastMouseX = this.p.mouseX;
-            this.lastMouseY = this.p.mouseY;
+            this.lastMouseX = x;
+            this.lastMouseY = y;
         }
 
-        const dx = this.p.mouseX - this.lastMouseX;
-        const dy = this.p.mouseY - this.lastMouseY;
+        const dx = x - this.lastMouseX;
+        const dy = y - this.lastMouseY;
 
-        this.lastMouseX = this.p.mouseX;
-        this.lastMouseY = this.p.mouseY;
+        this.lastMouseX = x;
+        this.lastMouseY = y;
 
         return [dx, dy];
     }
@@ -292,13 +295,14 @@ export class ScenePlayer {
         if (!this.initialized) return;
         const timestamp = this.currentTime(this.audioCtx.currentTime);
 
+        const [x, y] = this.getMousePosition();
         const [dx, dy] = this.mouseMovement();
 
         const evt: DkwdpMouseMoveEvent = {
             kind: 'mousemove',
             timestamp: timestamp,
-            x: this.p.mouseX,
-            y: this.p.mouseY,
+            x,
+            y,
             dx,
             dy,
             dragging: true,
@@ -311,13 +315,14 @@ export class ScenePlayer {
         if (!this.initialized) return;
         const timestamp = this.currentTime(this.audioCtx.currentTime);
 
+        const [x, y] = this.getMousePosition();
         const [dx, dy] = this.mouseMovement();
 
         const evt: DkwdpMouseMoveEvent = {
             kind: 'mousemove',
             timestamp: timestamp,
-            x: this.p.mouseX,
-            y: this.p.mouseY,
+            x,
+            y,
             dx,
             dy,
             dragging: false,
@@ -331,16 +336,22 @@ export class ScenePlayer {
     mouseWheel(event: WheelEvent) {
         if (!this.initialized) return;
         const timestamp = this.currentTime(this.audioCtx.currentTime);
+        const [x, y] = this.getMousePosition();
 
         const evt: DkwdpMouseWheelEvent = {
             kind: 'mousewheel',
             timestamp: timestamp,
             wheelX: event.deltaX,
             wheelY: event.deltaY,
-            x: this.p.mouseX,
-            y: this.p.mouseY,
+            x,
+            y,
         }
         this.events.push(evt);
+    }
+
+    getMousePosition(): [number, number] {
+        const [x, y] = this.coordinateSystem.s2w(this.p.mouseX, this.p.mouseY);
+        return [x, -y];
     }
 
     /*
