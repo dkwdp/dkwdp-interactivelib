@@ -22,12 +22,24 @@ export class Rect {
         this.height = height;
     }
 
+    /**
+     * Creates a new CollisionRect instance based on the provided image mode.
+     * @param x The x position defined by the image mode.
+     * @param y The y position defined by the image mode.
+     * @param width The width defined by the image mode.
+     * @param height The height defined by the image mode.
+     * @param mode One of the following modes: "center", "corner", "corners", "radius".
+     * If "center", the rect is centered at (x, y) and width and height are the width and height.
+     * If "corner", the rect (x, y) position is the top left corner of the image.
+     * If "corners", the rect (x, y) position is the top left corner of the image and width and height are the right and bottom positions of the image.
+     * If "radius", the rect is centered at (x, y) and has a width and height of 2 * radius.
+     */
     static fromMode(x: number, y: number, width: number, height: number, mode: "center" | "corner" | "corners" | "radius"): Rect {
         switch (mode) {
             case "center":
                 return new Rect(x, y, width, height);
             case "corner":
-                return new Rect(x + width / 2, y + height / 2, width, height);
+                return new Rect(x + width / 2, y - height / 2, width, height);
             case "corners":
                 return new Rect((x + width) / 2, (y + height) / 2, Math.abs(width - x), Math.abs(height - y));
             case "radius":

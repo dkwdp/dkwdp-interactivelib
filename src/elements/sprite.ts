@@ -12,7 +12,7 @@ export interface SpriteParams {
     size?: SpriteSize;
     rotation?: number;
     alpha?: number;
-    imageMode?: "corner" | "center" | "corners";
+    imageMode?: "corner" | "center" | "radius";
 }
 
 export class Sprite implements InteractiveElement {
@@ -40,9 +40,9 @@ export class Sprite implements InteractiveElement {
      * Image rendering mode. Default is "center".
      * corner: draws the sprite from the top-left corner.
      * center: draws the sprite from the center.
-     * corners: draws the sprite from the top-left and bottom-right corners.
+     * radius: draws the sprite from the center and size defines the radius.
      */
-    imageMode: "corner" | "center" | "corners";
+    imageMode: "corner" | "center" | "radius";
 
     private _clicked: boolean = false;
 
@@ -69,7 +69,6 @@ export class Sprite implements InteractiveElement {
     }
 
     touches(x: number, y: number, context: Context): boolean {
-        // TODO: respect rotation
         const image = context.spriteBuffer.get(this.filename);
         if (!image) {
             console.error(`Sprite image not found: ${this.filename}`);
@@ -77,11 +76,25 @@ export class Sprite implements InteractiveElement {
         }
 
         const [width, height] = this.getImageSize(image);
-        const collisionRect = Rect.fromMode(this.x, this.y, width, height, this.imageMode);
 
-        if (collisionRect.collidesPoint(x, y)) {
+        // Transform click point to sprite's local coordinate system (inverse rotation)
+        const dx = x - this.x;
+        const dy = y - this.y;
+        const cos = Math.cos(this.rotation);
+        const sin = Math.sin(this.rotation);
+        const localX = this.x + (dx * cos - dy * sin);
+        const localY = this.y + (dx * sin + dy * cos);
+
+        // convert radius -> center, because getImageSize already doubles image size, if radius is used.
+        let imageMode = this.imageMode;
+        if (imageMode === 'radius') {
+            imageMode = 'center';
+        }
+        const collisionRect = Rect.fromMode(this.x, this.y, width, height, imageMode);
+
+        if (collisionRect.collidesPoint(localX, localY)) {
             // Calculate relative position within the sprite (0 to 1)
-            const [xRel, yRel] = collisionRect.pointInRectRelative(x, y);
+            const [xRel, yRel] = collisionRect.pointInRectRelative(localX, localY);
 
             // Map to pixel coordinates in the image
             const pixelX = Math.floor(xRel * image.width);
@@ -104,12 +117,17 @@ export class Sprite implements InteractiveElement {
     }
 
     getImageSize(image: p5.Image): [number, number] {
+        let size: [number, number];
         if (typeof this.size === 'number') {
             const aspectRatio = image.width / image.height;
-            return [this.size * aspectRatio, this.size];
+            size = [this.size * aspectRatio, this.size];
         } else {
-            return this.size;
+            size = this.size
         }
+        if (this.imageMode === 'radius') {
+            size = [size[0] * 2, size[1] * 2];
+        }
+        return size;
     }
 
     draw(context: Context) {
@@ -121,7 +139,11 @@ export class Sprite implements InteractiveElement {
             // we flip y position here
             context.translate(this.x, this.y);
             context.rotate(this.rotation);
-            context.imageMode(this.imageMode);
+            let imageMode = this.imageMode;
+            if (imageMode === 'radius') {
+                imageMode = 'center';
+            }
+            context.imageMode(imageMode);
             const [w, h] = this.getImageSize(image);
             context.image(image, 0, 0, w, h);
             context.pop();
