@@ -1,6 +1,6 @@
 import {Context} from "../context";
 import p5 from "p5";
-import {InteractiveElement} from "./element";
+import {INTERACTIVE_ELEMENT_MARKER, InteractiveElement} from "./element";
 import {Rect} from "../collision";
 
 /**
@@ -16,6 +16,8 @@ export interface SpriteParams {
 }
 
 export class Sprite implements InteractiveElement {
+    _interactiveElementMarker: "interactiveElement" = INTERACTIVE_ELEMENT_MARKER;
+
     filename: string;
 
     x: number;

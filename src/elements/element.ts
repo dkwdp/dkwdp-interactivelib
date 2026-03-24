@@ -1,9 +1,13 @@
 import {Context} from "../context";
 
+export const INTERACTIVE_ELEMENT_MARKER = "interactiveElement";
+
 /**
  * Defines an element that can be drawn and updated.
  */
 export interface InteractiveElement {
+    _interactiveElementMarker: "interactiveElement";
+
     /**
      * Updates the element, for example by handling events.
      * @param context The context containing events.

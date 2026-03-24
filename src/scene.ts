@@ -1,5 +1,5 @@
 import {Context} from "./context";
-import {InteractiveElement} from "./elements/element";
+import {INTERACTIVE_ELEMENT_MARKER, InteractiveElement} from "./elements/element";
 
 export abstract class Scene {
     private autoDrawMembers: InteractiveElement[] | null = null;
@@ -12,15 +12,16 @@ export abstract class Scene {
     init(_context: Context): void {}
 
     collectAutoDrawMembers(): InteractiveElement[] {
-        const autoDrawMembers = [];
-        for (const memberName of (this.constructor as any).registeredMembers || []) {
+        const autoDrawMembers: InteractiveElement[] = [];
+        Object.keys(this).forEach(memberName => {
             const member = (this as any)[memberName];
-            if (member && member.draw && member.update) {
-                autoDrawMembers.push(member);
-            } else {
-                console.warn(`Member ${memberName} does not implement InteractiveElement: ${member}.`);
+            if (member && member._interactiveElementMarker === INTERACTIVE_ELEMENT_MARKER) {
+                const ignoredElements = (this.constructor as any).ignoredElements || new Set<string>();
+                if (!ignoredElements.has(memberName)) {
+                    autoDrawMembers.push(member);
+                }
             }
-        }
+        })
         return autoDrawMembers;
     }
 
@@ -62,10 +63,10 @@ export abstract class Scene {
  * @param elementKey The key of the element in the class.
  * @constructor
  */
-export function AutoDraw(sceneClass: any, elementKey: string) {
-    if (!sceneClass.constructor.registeredMembers) {
-        sceneClass.constructor.registeredMembers = [];
+export function Ignore(sceneClass: any, elementKey: string) {
+    if (!sceneClass.constructor.ignoredElements) {
+        sceneClass.constructor.ignoredElements = new Set<string>();
     }
     // Add the property name to the list
-    sceneClass.constructor.registeredMembers.push(elementKey);
+    sceneClass.constructor.ignoredElements.add(elementKey);
 }
