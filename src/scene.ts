@@ -58,8 +58,8 @@ export abstract class Scene {
 }
 
 /**
- * Decorator to collect elements that should be drawn automatically.
- * @param sceneClass The class that contains the elements to be drawn.
+ * Decorator to collect elements that should be ignored for automatic drawing.
+ * @param sceneClass The class that contains the elements to be ignored.
  * @param elementKey The key of the element in the class.
  * @constructor
  */
