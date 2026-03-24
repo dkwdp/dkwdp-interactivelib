@@ -44,6 +44,8 @@ export class Sprite implements InteractiveElement {
      */
     imageMode: "corner" | "center" | "corners";
 
+    private _clicked: boolean = false;
+
     constructor(filename: string, x: number, y: number, {size = 3.0, rotation = 0, alpha = 1.0, imageMode = "center"}: SpriteParams = {}) {
         this.filename = filename;
         this.x = x;
@@ -54,7 +56,17 @@ export class Sprite implements InteractiveElement {
         this.imageMode = imageMode;
     }
 
-    update(context: Context) {}
+    update(context: Context) {
+        this._clicked = false;
+        for (const evt of context.events) {
+            if (evt.kind === "mousedown") {
+                if (this.touches(evt.x, evt.y, context)) {
+                    this._clicked = true;
+                    break;
+                }
+            }
+        }
+    }
 
     touches(x: number, y: number, context: Context): boolean {
         // TODO: respect rotation
@@ -85,6 +97,10 @@ export class Sprite implements InteractiveElement {
             return alpha > 128;
         }
         return false;
+    }
+
+    get clicked(): boolean {
+        return this._clicked;
     }
 
     getImageSize(image: p5.Image): [number, number] {
