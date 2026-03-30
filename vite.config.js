@@ -7,7 +7,7 @@ export default defineConfig({
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
       name: 'DkwdpInteractive',
-      fileName: 'dkwdp-interactivelib',
+      fileName: 'dkwdpil',
       formats: ['es', 'umd']
     },
     rollupOptions: {

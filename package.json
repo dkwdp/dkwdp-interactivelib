@@ -1,5 +1,5 @@
 {
-  "name": "dkwdp-interactivelib",
+  "name": "dkwdpil",
   "version": "0.0.1",
   "description": "Build interactive tutorials using p5js.",
   "keywords": [
@@ -17,18 +17,18 @@
   "license": "GPL-3.0-or-later",
   "author": "Bruno Schilling bruno.schilling@protonmail.ch",
   "type": "module",
-  "main": "dist/dkwdp-interactivelib.cjs",
-  "module": "dist/dkwdp-interactivelib.js",
-  "types": "dist/dkwdp-interactivelib.d.ts",
+  "main": "dist/dkwdpil.js",
+  "module": "dist/dkwdpil.js",
+  "types": "dist/dkwdpil.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\"",
     "build": "vite build"
   },
   "exports": {
     ".": {
-      "types": "dist/dkwdp-interactivelib.d.ts",
-      "import": "dist/dkwdp-interactivelib.js",
-      "require": "dist/dkwdp-interactivelib.cjs"
+      "types": "dist/dkwdpil.d.ts",
+      "import": "dist/dkwdpil.js",
+      "require": "dist/dkwdpil.cjs"
     }
   },
   "files": ["dist"],
