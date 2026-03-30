@@ -4,6 +4,7 @@ import {ScenePlayer} from "./scene-player";
 
 export * from "./scene-player";
 export * from "./scene";
+export * from "./elements/element";
 export * from "./elements/sprite";
 export * from "./context";
 
