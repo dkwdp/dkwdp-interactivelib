@@ -22,7 +22,8 @@
   "types": "dist/dkwdpil.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\"",
-    "build": "vite build"
+    "build": "vite build",
+    "prepublishOnly": "npm run build"
   },
   "exports": {
     ".": {
@@ -31,7 +32,7 @@
       "require": "dist/dkwdpil.cjs"
     }
   },
-  "files": ["dist"],
+  "files": ["dist", "README.md", "LICENSE"],
   "devDependencies": {
     "typescript": "^5.9.3",
     "vite": "^7.3.1",
