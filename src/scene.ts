@@ -29,12 +29,14 @@ export abstract class Scene {
         if (this.autoDrawMembers === null)
             this.autoDrawMembers = this.collectAutoDrawMembers();
         for (const member of this.autoDrawMembers)
-            member.update(context);
+            if (member.visible)
+                member.update(context);
     }
 
     autoDrawDraw(context: Context) {
         for (const member of this.autoDrawMembers!)
-            member.draw(context);
+            if (member.visible)
+                member.draw(context);
     }
 
     call(context: Context) {

@@ -18,6 +18,8 @@ export interface SpriteParams {
 export class Sprite implements InteractiveElement {
     _interactiveElementMarker: "interactiveElement" = INTERACTIVE_ELEMENT_MARKER;
 
+    visible: boolean = true;
+
     filename: string;
 
     x: number;

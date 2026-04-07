@@ -6,6 +6,7 @@ export * from "./scene-player";
 export * from "./scene";
 export * from "./elements/element";
 export * from "./elements/sprite";
+export * from "./elements/label";
 export * from "./context";
 
 export function initScenes(parent: HTMLElement, sceneBuffer: [string, Scene][], audioAssets: string[], imageAssets: string[]) {
