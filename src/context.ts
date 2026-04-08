@@ -91,6 +91,24 @@ export class Context {
     }
 
     /**
+     * Computes a generic (non-tight) bounding box for a block of text.
+     * The fontBounds() function calculates the bounding box for the text based on the font's intrinsic metrics
+     * (such as fontBoundingBoxAscent and fontBoundingBoxDescent).
+     * Unlike textBounds(), which measures the exact pixel boundaries of the rendered text, fontBounds() provides a
+     * looser measurement derived from the font’s default spacing.
+     * This measurement is useful for layout purposes where a consistent approximation of the text's dimensions is
+     * desired.
+     * @param text The text to measure.
+     * @param x The x position of the text.
+     * @param y The y position of the text.
+     * @param w The width of the text box.
+     * @param h The height of the text box.
+     */
+    fontBounds(text: string, x: number, y: number, w?: number, h?: number): {x: number, y: number, w: number, h: number} {
+        return this.p.fontBounds(text, x, y, w, h);
+    }
+
+    /**
      * Returns the mouse position in dkwdp-coordinates.
      */
     get mousePos(): p5.Vector {
@@ -170,8 +188,8 @@ export class Context {
         this.p.fill(r, g, b, a);
     }
 
-    rect(x: number, y: number, w: number, h: number) {
-        this.p.rect(x, -y, w, h);
+    rect(x: number, y: number, w: number, h: number, tl?: number, tr?: number, br?: number, bl?: number) {
+        this.p.rect(x, -y, w, h, tl, tr, br, bl);
     }
 
     circle(x: number, y: number, r: number) {
