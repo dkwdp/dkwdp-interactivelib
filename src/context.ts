@@ -108,6 +108,14 @@ export class Context {
         return this.p.fontBounds(text, x, y, w, h);
     }
 
+    textBounds(text: string, x: number, y: number, width?: number, height?: number): {x: number, y: number, w: number, h: number} {
+        return this.p.textBounds(text, x, y, width, height);
+    }
+
+    cursor(type: string | "arrow" | "cross" | "hand" | "move" | "text", x?: number, y?: number) {
+        this.p.cursor(type, x, y);
+    }
+
     /**
      * Returns the mouse position in dkwdp-coordinates.
      */
