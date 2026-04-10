@@ -4,7 +4,7 @@ A js library on top of p5js to build interactive tutorials.
 
 # Getting started
 
-Clone the example project:
+Clone the example project or create a new repository with dkwdp/dkwdpil-template as template:
 ```shell
 git clone git@github.com:dkwdp/dkwdpil-template.git
 cd dkwdpil-template
@@ -16,7 +16,7 @@ npm uninstall dkwdpil
 npm install ../path/to/dkwdp-interactivelib
 ```
 
-Install the library:
+Install dependencies:
 ```shell
 npm install
 ```
