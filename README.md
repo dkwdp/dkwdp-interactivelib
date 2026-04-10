@@ -6,8 +6,14 @@ A js library on top of p5js to build interactive tutorials.
 
 Clone the example project:
 ```shell
-git clone git@github.com:Bluemi/dkwdp-tutorials.git
-cd dkwdp-tutorials/minimal_template
+git clone git@github.com:dkwdp/dkwdpil-template.git
+cd dkwdpil-template
+```
+
+*For development purposes, you can also install dkwdpil via file.*
+```shell
+npm uninstall dkwdpil
+npm install ../path/to/dkwdp-interactivelib
 ```
 
 Install the library:
@@ -110,7 +116,7 @@ export class MyElement implements InteractiveElement {
 Draw methods are very similar to the p5js draw methods, but with a different coordinate system.
 
 ## Coordinates
-The coordinate system is a bit unusual:
+The coordinate system is as follows:
 
 - The zero point is in the center of the screen.
 - The x-axis is horizontal and points to the right.
