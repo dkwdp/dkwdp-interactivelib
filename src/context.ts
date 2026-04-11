@@ -108,6 +108,14 @@ export class Context {
         return this.p.fontBounds(text, x, y, w, h);
     }
 
+    fontWidth(text: string): number {
+        return this.p.fontWidth(text);
+    }
+
+    textWidth(text: string): number {
+        return this.p.textWidth(text);
+    }
+
     textBounds(text: string, x: number, y: number, width?: number, height?: number): {x: number, y: number, w: number, h: number} {
         return this.p.textBounds(text, x, y, width, height);
     }
@@ -184,6 +192,14 @@ export class Context {
 
     textSize(size: number) {
         this.p.textSize(size);
+    }
+
+    textAscent(txt?: string): number {
+        return this.p.textAscent(txt);
+    }
+
+    textDescent(txt?: string): number {
+        return this.p.textDescent(txt);
     }
 
     noStroke() {

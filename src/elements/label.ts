@@ -1,5 +1,6 @@
 import {Context} from "../context";
 import {INTERACTIVE_ELEMENT_MARKER, InteractiveElement} from "./element";
+import {Rect} from "../collision";
 
 export interface LabelParams {
     fontsize?: number;
@@ -70,35 +71,21 @@ export class Label implements InteractiveElement {
         if (x === undefined) x = c.mousePos.x;
         if (y === undefined) y = c.mousePos.y;
 
-        // Measure text dimensions
-        c.push();
+        const rect = this.getRect(c);
+        return rect.collidesPoint(x, y);
+    }
+
+    getRect(c: Context): Rect {
         c.textSize(this.fontsize);
-        c.textAlign(this.horizAlign, this.vertAlign);
-        const metrics = c.fontBounds(this.text, this.x, this.y);
-        c.pop();
-
-        // Apply alignment offsets
-        let offsetX = 0;
-        if (this.horizAlign === "center") offsetX = -metrics.w / 2;
-        else if (this.horizAlign === "right") offsetX = -metrics.w;
-
-        let offsetY = 0;
-        if (this.vertAlign === "top") offsetY = -metrics.h / 2;
-        else if (this.vertAlign === "center") offsetY = -metrics.h / 2;
-        else if (this.vertAlign === "bottom") offsetY = -metrics.h;
-        else if (this.vertAlign === "alphabetic") offsetY = -metrics.h;
-
-        // Transform point to local coordinates (inverse of rotation and translation)
-        const dx = x - this.x;
-        const dy = -(y - this.y); // TODO: fix this correctly
-        const cos = Math.cos(-this.rotation);
-        const sin = Math.sin(-this.rotation);
-        const localX = dx * cos - dy * sin;
-        const localY = dx * sin + dy * cos;
-
-        // Check if point is within text bounds
-        return localX >= offsetX && localX <= offsetX + metrics.w &&
-               localY >= offsetY * 0.2 && localY <= offsetY + metrics.h; // TODO: fix this correctly
+        let vertAlign = this.vertAlign;
+        let y = this.y;
+        if (this.vertAlign === "alphabetic") {
+            vertAlign = "top";
+            y = this.y + c.textAscent(this.text);
+        }
+        c.textAlign(this.horizAlign, vertAlign);
+        const w = c.fontWidth(this.text);
+        return Rect.fromTextAlign(this.x, y, w, this.fontsize, this.horizAlign, vertAlign);
     }
 
     update(c: Context) {

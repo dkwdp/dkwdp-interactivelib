@@ -47,6 +47,58 @@ export class Rect {
         }
     }
 
+    /**
+     * Creates a new CollisionRect instance based on the provided text align.
+     * @param x The x position defined by the image mode.
+     * @param y The y position defined by the image mode.
+     * @param width The width defined by the image mode.
+     * @param height The height defined by the image mode.
+     * @param horizAlign One of the following modes: "left", "center", "right", defining the interpretation of the
+     * given values.
+     * If "left", x is the left position of the text.
+     * If "center", the x position is the center of the text.
+     * If "right", the x position is the right position of the text.
+     * @param vertAlign One of the following modes: "top", "center", "bottom", "alphabetic", defining the interpretation of the
+     * given values.
+     * If "top", y is the top position of the text.
+     * If "center", the y position is the center of the text.
+     * If "bottom", the y position is the bottom position of the text.
+     * If "alphabetic", the y position is the alphabetic baseline of the text.
+     */
+    static fromTextAlign(
+        x: number, y: number, width: number, height: number,
+        horizAlign: "left" | "center" | "right", vertAlign: "top" | "center" | "bottom" | "alphabetic"
+    ): Rect {
+        let xRect;
+        switch (horizAlign) {
+            case "left":
+                xRect = x + width / 2;
+                break;
+            case "center":
+                xRect = x;
+                break;
+            case "right":
+                xRect = x - width / 2;
+                break;
+        }
+        let yRect;
+        switch (vertAlign) {
+            case "top":
+                yRect = y - height / 2;
+                break;
+            case "center":
+                yRect = y;
+                break;
+            case "bottom":
+                yRect = y + height / 2;
+                break;
+            case "alphabetic":
+                yRect = y + height / 2;
+                break;
+        }
+        return new Rect(xRect, yRect, width, height);
+    }
+
     collidesRect(other: Rect): boolean {
         return (
             this.minX <= other.maxX &&
