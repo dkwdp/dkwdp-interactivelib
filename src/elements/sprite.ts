@@ -46,6 +46,7 @@ export class Sprite implements InteractiveElement {
      */
     imageMode: "corner" | "center" | "radius";
 
+    private _hovered: boolean = false;
     private _clicked: boolean = false;
 
     constructor(filename: string, x: number, y: number, {size = 3.0, rotation = 0, alpha = 1.0, imageMode = "center"}: SpriteParams = {}) {
@@ -59,10 +60,11 @@ export class Sprite implements InteractiveElement {
     }
 
     update(context: Context) {
+        this._hovered = this.touches(context.mousePos.x, context.mousePos.y, context);
         this._clicked = false;
-        for (const evt of context.events) {
-            if (evt.kind === "mousedown") {
-                if (this.touches(evt.x, evt.y, context)) {
+        if (this._hovered) {
+            for (const evt of context.events) {
+                if (evt.kind === "mousedown") {
                     this._clicked = true;
                     break;
                 }
@@ -116,6 +118,10 @@ export class Sprite implements InteractiveElement {
 
     get clicked(): boolean {
         return this._clicked;
+    }
+
+    get hovered(): boolean {
+        return this._hovered;
     }
 
     getImageSize(image: p5.Image): [number, number] {
