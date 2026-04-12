@@ -1,11 +1,12 @@
 import {Context} from "../context";
 import {INTERACTIVE_ELEMENT_MARKER, InteractiveElement} from "./element";
-import {Rect} from "../collision";
+import {Rect} from "../element-helpers/rect";
+import {TextTools, HorizAlign, VertAlign} from "../element-helpers/text-tools";
 
 export interface LabelParams {
     fontsize?: number;
-    horizAlign?: "left" | "center" | "right";
-    vertAlign?: "top" | "center" | "bottom" | "alphabetic";
+    horizAlign?: HorizAlign;
+    vertAlign?: VertAlign;
     rotation?: number;
     alpha?: number;
     color?: [number, number, number];
@@ -31,7 +32,7 @@ export class Label implements InteractiveElement {
      * center: draws the label center aligned
      * radius: draws the label right aligned
      */
-    horizAlign: "left" | "center" | "right" = "left";
+    horizAlign: HorizAlign = "left";
 
     /**
      * Image rendering mode. Default is "top".
@@ -40,7 +41,7 @@ export class Label implements InteractiveElement {
      * bottom: draws the label bottom aligned
      * alphabetic: draws the label alphabetic aligned
      */
-    vertAlign: "top" | "center" | "bottom" | "alphabetic";
+    vertAlign: VertAlign = "top";
 
     /**
      * Rotation in radians.
@@ -76,24 +77,15 @@ export class Label implements InteractiveElement {
     }
 
     getRect(c: Context): Rect {
-        c.textSize(this.fontsize);
-        let vertAlign = this.vertAlign;
-        let y = this.y;
-        if (this.vertAlign === "alphabetic") {
-            vertAlign = "top";
-            y = this.y + c.textAscent(this.text);
-        }
-        c.textAlign(this.horizAlign, vertAlign);
-        const w = c.fontWidth(this.text);
-        return Rect.fromTextAlign(this.x, y, w, this.fontsize, this.horizAlign, vertAlign);
+        return TextTools.getRect(c, this.text, this.x, this.y, this.fontsize, this.horizAlign, this.vertAlign);
     }
 
     update(c: Context) {
         this._clicked = false;
         this._hovered = this.touches(c);
-        for (const evt of c.events) {
-            if (evt.kind === "mousedown") {
-                if (this._hovered) {
+        if (this._hovered) {
+            for (const evt of c.events) {
+                if (evt.kind === "mousedown") {
                     this._clicked = true;
                     break;
                 }

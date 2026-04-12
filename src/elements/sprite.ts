@@ -1,7 +1,7 @@
 import {Context} from "../context";
 import p5 from "p5";
 import {INTERACTIVE_ELEMENT_MARKER, InteractiveElement} from "./element";
-import {Rect} from "../collision";
+import {Rect} from "../element-helpers/rect";
 
 /**
  * If a single number is provided, it represents the height in dkwdp-coordinates.
