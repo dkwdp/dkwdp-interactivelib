@@ -61,7 +61,7 @@ export class Sprite implements InteractiveElement {
     }
 
     update(context: Context) {
-        this._hovered = this.touches(context.mousePos.x, context.mousePos.y, context);
+        this._hovered = this.touches(context, context.mousePos.x, context.mousePos.y);
         this._clicked = false;
         if (this._hovered) {
             for (const evt of context.events) {
@@ -73,8 +73,11 @@ export class Sprite implements InteractiveElement {
         }
     }
 
-    touches(x: number, y: number, context: Context): boolean {
-        const image = context.spriteBuffer.get(this.filename);
+    touches(c: Context, x?: number, y?: number): boolean {
+        if (x === undefined) x = c.mousePos.x;
+        if (y === undefined) y = c.mousePos.y;
+
+        const image = c.spriteBuffer.get(this.filename);
         if (!image) {
             console.error(`Sprite image not found: ${this.filename}`);
             return false;
@@ -109,7 +112,7 @@ export class Sprite implements InteractiveElement {
             const pixelColor = image.get(pixelX, pixelY);
 
             // Check alpha channel (index 3 in RGBA array)
-            const alpha = context.alpha(pixelColor);
+            const alpha = c.alpha(pixelColor);
 
             // Return true if pixel is not transparent (alpha > threshold)
             return alpha > 128;
@@ -159,5 +162,27 @@ export class Sprite implements InteractiveElement {
         } else {
             console.error(`Sprite image not found: ${this.filename}`);
         }
+    }
+
+    dump(): any {
+        return {
+            visible: this.visible,
+            filename: this.filename,
+            x: this.x,
+            y: this.y,
+            rotation: this.rotation,
+            alpha: this.alpha,
+            imageMode: this.imageMode,
+        }
+    }
+
+    load(data: any): void {
+        this.visible = data.visible;
+        this.filename = data.filename;
+        this.x = data.x;
+        this.y = data.y;
+        this.rotation = data.rotation;
+        this.alpha = data.alpha;
+        this.imageMode = data.imageMode;
     }
 }

@@ -8,6 +8,7 @@ export * from "./elements/element";
 export * from "./elements/sprite";
 export * from "./elements/label";
 export * from "./context";
+export * from "./edit-scene";
 
 export function initScenes(parent: HTMLElement, sceneBuffer: [string, Scene][], audioAssets: string[], imageAssets: string[]) {
     new p5((p) => {

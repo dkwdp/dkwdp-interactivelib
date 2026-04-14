@@ -26,4 +26,18 @@ export interface InteractiveElement {
      * @param context - The rendering context where graphics will be drawn.
      */
     draw(context: Context): void;
+
+    /**
+     * Creates a JSON-serializable representation of the element.
+     * The result only contains properties, that are important to reproduce the object.
+     * It doesn't include volatile properties.
+     *
+     * @returns An object containing the element's properties.'
+     */
+    dump(): any;
+
+    /**
+     * Loads properties from a JSON-serializable object. The data object can be created using the dump() method.
+     */
+    load(data: any): void;
 }

@@ -2,7 +2,7 @@ import {Context} from "./context";
 import {INTERACTIVE_ELEMENT_MARKER, InteractiveElement} from "./elements/element";
 
 export abstract class Scene {
-    private autoDrawMembers: InteractiveElement[] | null = null;
+    protected autoDrawMembers: InteractiveElement[] | null = null;
 
     /**
      * Initializes the application with the specified time, render context, and audio engine.

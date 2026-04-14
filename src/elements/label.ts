@@ -56,7 +56,7 @@ export class Label implements InteractiveElement {
     private _clicked: boolean = false;
     private _hovered: boolean = false;
 
-    constructor(text: string, x: number, y: number, {fontsize = 12, horizAlign = "left", vertAlign = "top", rotation = 0, alpha = 0, color = [0, 0, 0]}: LabelParams = {}) {
+    constructor(text: string, x: number, y: number, {fontsize = 3, horizAlign = "left", vertAlign = "top", rotation = 0, alpha = 0, color = [0, 0, 0]}: LabelParams = {}) {
         this.text = text;
         this.x = x;
         this.y = y;
@@ -112,5 +112,33 @@ export class Label implements InteractiveElement {
         c.fill(this.color[0], this.color[1], this.color[2]);
         c.text(this.text, 0, 0);
         c.pop();
+    }
+
+    dump(): any {
+        return {
+            visible: this.visible,
+            text: this.text,
+            x: this.x,
+            y: this.y,
+            fontsize: this.fontsize,
+            horizAlign: this.horizAlign,
+            vertAlign: this.vertAlign,
+            color: this.color,
+            rotation: this.rotation,
+            alpha: this.alpha,
+        }
+    }
+
+    load(data: any): void {
+        this.visible = data.visible;
+        this.text = data.text;
+        this.x = data.x;
+        this.y = data.y;
+        this.fontsize = data.fontsize;
+        this.horizAlign = data.horizAlign;
+        this.vertAlign = data.vertAlign;
+        this.color = data.color;
+        this.rotation = data.rotation;
+        this.alpha = data.alpha;
     }
 }

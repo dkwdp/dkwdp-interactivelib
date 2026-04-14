@@ -28,6 +28,12 @@ export class Context {
     readonly BOTTOM: "bottom" = "bottom";
     readonly CLOSE: "close" = "close";
 
+    readonly SHIFT: string = "Shift";
+    readonly LEFT_ARROW: string = "ArrowLeft";
+    readonly RIGHT_ARROW: string = "ArrowRight";
+    readonly DOWN_ARROW: string = "ArrowDown";
+    readonly UP_ARROW: string = "ArrowUp";
+
     constructor(time: number, globalTime: number, p: p5, spriteBuffer: SpriteBuffer, audioPlayers: AudioPlayer[], audioBuffer: AudioBuf, events: Evt[], coordinates: CoordinateSystem) {
         this.time = time;
         this.globalTime = globalTime;
@@ -248,5 +254,31 @@ export class Context {
 
     vertex(x: number, y: number) {
         this.p.vertex(x, -y);
+    }
+
+    keyJustPressed(key: string | number): boolean {
+        for (const evt of this.events) {
+            if (evt.kind === "keydown") {
+                if (evt.key === key || evt.keyCode === key || evt.code === key) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    keyJustTyped(key: string | number): boolean {
+        for (const evt of this.events) {
+            if (evt.kind === "keytyped") {
+                if (evt.key === key || evt.keyCode === key || evt.code === key) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    keyIsDown(key: string): boolean {
+        return this.p.keyIsDown(key);
     }
 }
