@@ -8,11 +8,12 @@ import {Rect} from "../element-helpers/rect";
  * If an array of two numbers is provided, it represents the width and height in dkwdp-coordinates.
  */
 export type SpriteSize = number | [number, number];
+export type ImageMode = "corner" | "center" | "radius";
 export interface SpriteParams {
     size?: SpriteSize;
     rotation?: number;
     alpha?: number;
-    imageMode?: "corner" | "center" | "radius";
+    imageMode?: ImageMode;
 }
 
 export class Sprite implements InteractiveElement {
@@ -44,7 +45,7 @@ export class Sprite implements InteractiveElement {
      * center: draws the sprite from the center.
      * radius: draws the sprite from the center and size defines the radius.
      */
-    imageMode: "corner" | "center" | "radius";
+    imageMode: ImageMode;
 
     private _hovered: boolean = false;
     private _clicked: boolean = false;
