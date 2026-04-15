@@ -1,6 +1,6 @@
-import {Context} from "../context";
+import {Context, ContextNotProvidedError} from "../context";
 import p5 from "p5";
-import {INTERACTIVE_ELEMENT_MARKER, InteractiveElement} from "./element";
+import {InteractiveElement} from "./interactive-element";
 import {Rect} from "../element-helpers/rect";
 
 /**
@@ -16,15 +16,8 @@ export interface SpriteParams {
     imageMode?: ImageMode;
 }
 
-export class Sprite implements InteractiveElement {
-    _interactiveElementMarker: "interactiveElement" = INTERACTIVE_ELEMENT_MARKER;
-
-    visible: boolean = true;
-
+export class Sprite extends InteractiveElement {
     filename: string;
-
-    x: number;
-    y: number;
 
     /** The absolute size of the sprite in dkwdp-coordinates.
      * If a single number is provided, it represents the height.
@@ -47,13 +40,9 @@ export class Sprite implements InteractiveElement {
      */
     imageMode: ImageMode;
 
-    private _hovered: boolean = false;
-    private _clicked: boolean = false;
-
     constructor(filename: string, x: number, y: number, {size = 3.0, rotation = 0, alpha = 1.0, imageMode = "center"}: SpriteParams = {}) {
+        super(x, y);
         this.filename = filename;
-        this.x = x;
-        this.y = y;
         this.size = size;
         this.rotation = rotation;
         this.alpha = alpha;
@@ -61,29 +50,14 @@ export class Sprite implements InteractiveElement {
     }
 
     update(context: Context) {
-        this._hovered = this.touches(context, context.mousePos.x, context.mousePos.y);
-        this._clicked = false;
-        if (this._hovered) {
-            for (const evt of context.events) {
-                if (evt.kind === "mousedown") {
-                    this._clicked = true;
-                    break;
-                }
-            }
-        }
+        super.update(context);
     }
 
-    touches(c: Context, x?: number, y?: number): boolean {
-        if (x === undefined) x = c.mousePos.x;
-        if (y === undefined) y = c.mousePos.y;
+    touches(x?: number, y?: number): boolean {
+        if (this._context === null) throw new ContextNotProvidedError();
 
-        const image = c.spriteBuffer.get(this.filename);
-        if (!image) {
-            console.error(`Sprite image not found: ${this.filename}`);
-            return false;
-        }
-
-        const [width, height] = this.getImageSize(image);
+        if (x === undefined) x = this._context.mousePos.x;
+        if (y === undefined) y = this._context.mousePos.y;
 
         // Transform click point to sprite's local coordinate system (inverse rotation)
         const dx = x - this.x;
@@ -93,14 +67,14 @@ export class Sprite implements InteractiveElement {
         const localX = this.x + (dx * cos - dy * sin);
         const localY = this.y + (dx * sin + dy * cos);
 
-        // convert radius -> center, because getImageSize already doubles image size, if radius is used.
-        let imageMode = this.imageMode;
-        if (imageMode === 'radius') {
-            imageMode = 'center';
-        }
-        const collisionRect = Rect.fromMode(this.x, this.y, width, height, imageMode);
+        const collisionRect = this.getBoundingBox();
 
         if (collisionRect.collidesPoint(localX, localY)) {
+            const image = this.getImage();
+            if (!image) {
+                console.error(`Sprite image not found: ${this.filename}`);
+                return false;
+            }
             // Calculate relative position within the sprite (0 to 1)
             const [xRel, yRel] = collisionRect.pointInRectRelative(localX, localY);
 
@@ -112,7 +86,7 @@ export class Sprite implements InteractiveElement {
             const pixelColor = image.get(pixelX, pixelY);
 
             // Check alpha channel (index 3 in RGBA array)
-            const alpha = c.alpha(pixelColor);
+            const alpha = this._context.alpha(pixelColor);
 
             // Return true if pixel is not transparent (alpha > threshold)
             return alpha > 128;
@@ -120,17 +94,28 @@ export class Sprite implements InteractiveElement {
         return false;
     }
 
-    get clicked(): boolean {
-        return this._clicked;
+    private getImage(): p5.Image {
+        const image = this.getContext().spriteBuffer.get(this.filename);
+        if (!image) {
+            console.error(`Sprite image not found: ${this.filename}`);
+        }
+        return image;
     }
 
-    get hovered(): boolean {
-        return this._hovered;
+    getBoundingBox(): Rect {
+        // convert radius -> center, because getImageSize already doubles image size, if radius is used.
+        let imageMode = this.imageMode;
+        if (imageMode === 'radius') {
+            imageMode = 'center';
+        }
+        const [width, height] = this.getImageSize();
+        return Rect.fromMode(this.x, this.y, width, height, imageMode);
     }
 
-    getImageSize(image: p5.Image): [number, number] {
+    getImageSize(): [number, number] {
         let size: [number, number];
         if (typeof this.size === 'number') {
+            const image = this.getImage();
             const aspectRatio = image.width / image.height;
             size = [this.size * aspectRatio, this.size];
         } else {
@@ -142,26 +127,51 @@ export class Sprite implements InteractiveElement {
         return size;
     }
 
-    draw(context: Context) {
-        const image = context.spriteBuffer.get(this.filename);
+    draw() {
+        if (this._context === null) throw new ContextNotProvidedError();
+
+        const image = this._context.spriteBuffer.get(this.filename);
         if (image) {
-            context.push();
+            this._context.push();
             if (this.alpha < 1.0)
-                context.tint(255, this.alpha * 255);
+                this._context.tint(255, this.alpha * 255);
             // we flip y position here
-            context.translate(this.x, this.y);
-            context.rotate(this.rotation);
+            this._context.translate(this.x, this.y);
+            this._context.rotate(this.rotation);
             let imageMode = this.imageMode;
             if (imageMode === 'radius') {
                 imageMode = 'center';
             }
-            context.imageMode(imageMode);
-            const [w, h] = this.getImageSize(image);
-            context.image(image, 0, 0, w, h);
-            context.pop();
+            this._context.imageMode(imageMode);
+            const [w, h] = this.getImageSize();
+            this._context.image(image, 0, 0, w, h);
+            this._context.pop();
         } else {
             console.error(`Sprite image not found: ${this.filename}`);
         }
+    }
+
+    changeSize(scale: number) {
+        if (Array.isArray(this.size)) {
+            this.size = [this.size[0] * scale, this.size[1] * scale];
+        } else {
+            this.size *= scale;
+        }
+    }
+
+    handleEdit(c: Context, mode: "normal" | "edit") {
+        super.handleEdit(c, mode);
+        if (mode === "normal") {
+            if (c.keyJustPressed("+")) {
+                this.changeSize(1.2);
+            } else if (c.keyJustPressed("-")) {
+                this.changeSize(1 / 1.2);
+            }
+        }
+    }
+
+    getSourceCode(): string {
+        return `spriteName: Sprite = new Sprite("${this.filename}", ${this.x.toFixed(2)}, ${this.y.toFixed(2)}, {size: ${this.size}, imageMode: "${this.imageMode}", rotation: ${this.rotation.toFixed(2)}, alpha: ${this.alpha}});`;
     }
 
     dump(): any {

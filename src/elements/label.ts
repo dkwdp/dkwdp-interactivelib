@@ -1,5 +1,5 @@
 import {Context} from "../context";
-import {INTERACTIVE_ELEMENT_MARKER, InteractiveElement} from "./element";
+import {InteractiveElement} from "./interactive-element";
 import {Rect} from "../element-helpers/rect";
 import {TextTools, HorizAlign, VertAlign} from "../element-helpers/text-tools";
 
@@ -12,15 +12,8 @@ export interface LabelParams {
     color?: [number, number, number];
 }
 
-export class Label implements InteractiveElement {
-    _interactiveElementMarker: "interactiveElement" = INTERACTIVE_ELEMENT_MARKER;
-
-    visible: boolean = true;
-
+export class Label extends InteractiveElement {
     text: string;
-
-    x: number;
-    y: number;
 
     fontsize: number;
 
@@ -53,13 +46,9 @@ export class Label implements InteractiveElement {
      */
     alpha: number;
 
-    private _clicked: boolean = false;
-    private _hovered: boolean = false;
-
     constructor(text: string, x: number, y: number, {fontsize = 3, horizAlign = "left", vertAlign = "top", rotation = 0, alpha = 0, color = [0, 0, 0]}: LabelParams = {}) {
+        super(x, y);
         this.text = text;
-        this.x = x;
-        this.y = y;
         this.fontsize = fontsize;
         this.horizAlign = horizAlign;
         this.vertAlign = vertAlign;
@@ -68,40 +57,44 @@ export class Label implements InteractiveElement {
         this.color = color;
     }
 
-    touches(c: Context, x?: number, y?: number): boolean {
-        if (x === undefined) x = c.mousePos.x;
-        if (y === undefined) y = c.mousePos.y;
-
-        const rect = this.getRect(c);
-        return rect.collidesPoint(x, y);
-    }
-
-    getRect(c: Context): Rect {
-        return TextTools.getRect(c, this.text, this.x, this.y, this.fontsize, this.horizAlign, this.vertAlign);
+    getBoundingBox(): Rect {
+        return TextTools.getRect(this._context!, this.text, this.x, this.y, this.fontsize, this.horizAlign, this.vertAlign);
     }
 
     update(c: Context) {
-        this._clicked = false;
-        this._hovered = this.touches(c);
-        if (this._hovered) {
+        super.update(c);
+    }
+
+    handleEdit(c: Context, mode: "normal" | "edit") {
+        super.handleEdit(c, mode);
+
+        if (mode === "normal") {
+            if (c.keyJustPressed("+")) {
+                this.fontsize *= 1.2;
+            }
+            if (c.keyJustPressed("-")) {
+                this.fontsize *= 1 / 1.2;
+            }
+        } else if (mode === "edit") {
             for (const evt of c.events) {
-                if (evt.kind === "mousedown") {
-                    this._clicked = true;
-                    break;
+                if (evt.kind === 'keytyped') {
+                    this.text += evt.key;
+                } else if (evt.kind === 'keydown') {
+                    switch (evt.key) {
+                        case "Backspace":
+                            this.text = this.text.slice(0, -1);
+                            break;
+                        case "Delete":
+                            this.text = '';
+                            break;
+                    }
                 }
             }
         }
     }
 
-    get hovered(): boolean {
-        return this._hovered;
-    }
-
-    get clicked(): boolean {
-        return this._clicked;
-    }
-
-    draw(c: Context) {
+    draw() {
+        const c = this.getContext();
         c.push();
         c.translate(this.x, this.y);
         c.rotate(this.rotation);
@@ -127,6 +120,10 @@ export class Label implements InteractiveElement {
             rotation: this.rotation,
             alpha: this.alpha,
         }
+    }
+
+    getSourceCode(): string {
+        return `labelName: Label = new Label("${this.text}", ${this.x.toFixed(2)}, ${this.y.toFixed(2)}, {fontsize: ${this.fontsize}, horizAlign: "${this.horizAlign}", vertAlign: "${this.vertAlign}", rotation: ${this.rotation}, alpha: ${this.alpha}, color: [${this.color[0]}, ${this.color[1]}, ${this.color[2]}]});`;
     }
 
     load(data: any): void {

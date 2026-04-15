@@ -1,8 +1,5 @@
 export type EventKind = 'keydown' | 'keyup' | 'keytyped' | 'mousedown' | 'mouseup' | 'click' | 'mousemove' | 'mousewheel';
 
-// TODO: Coordinate systems for positions
-// TODO: Add MouseWheelEvent
-
 export interface BaseEvent {
     kind: EventKind;
     timestamp: number;

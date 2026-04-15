@@ -1,48 +1,70 @@
 import {Scene} from "./scene";
 import {Context} from "./context";
-import {InteractiveElement} from "./elements/element";
+import {InteractiveElement} from "./elements/interactive-element";
 import {Label} from "./elements/label";
 import {Sprite} from "./elements/sprite";
 
 export class EditScene extends Scene {
     interactiveElements: InteractiveElement[] = [];
-    selectedElement: InteractiveElement | null = null;
+    selectedElements: InteractiveElement[] = [];
 
     mode: "normal" | "edit" = "normal";
 
     update(c: Context): void {
-        if (this.mode === "normal") {
-            if (c.keyJustPressed("l")) {
-                this.interactiveElements.push(new Label("Hello...", 0, 0, {fontsize: 1}));
-            } else if (c.keyJustPressed("s")) {
-                this.interactiveElements.push(new Sprite("edit.png", 0, 0));
-            } else if (c.keyJustPressed("c")) {
-                this.dumpCopy(c);
-            }
-        }
+        this.addElements(c);
+
+        for (const elem of this.interactiveElements) elem.update(c);
 
         this.handleSelectedElement(c);
 
         this.handleMode(c);
 
+        this.draw(c);
+    }
+
+    private draw(c: Context) {
         c.background(230);
 
         if (this.interactiveElements.length === 0) {
-            new Label("No elements", 0, 0, {vertAlign: "center", horizAlign: "center", fontsize: 2}).draw(c);
-        } else {
-            for (const elem of this.interactiveElements) {
-                elem.update(c);
-                elem.draw(c);
+            const label = new Label("No elements", 0, 0, {vertAlign: "center", horizAlign: "center", fontsize: 2});
+            label.update(c);
+            label.draw();
+        }
+        for (const elem of this.interactiveElements)
+            elem.draw();
+
+        // draw interactive element
+        for (const selectedElement of this.selectedElements) {
+            const rect = selectedElement.getBoundingBox();
+            c.push()
+            c.rectMode("center");
+            c.noFill();
+            c.strokeWeight(0.1);
+            c.stroke(101, 179, 225);
+            c.rect(rect.x, rect.y, rect.width, rect.height);
+            c.pop();
+        }
+    }
+
+    private addElements(c: Context) {
+        if (this.mode === "normal") {
+            if (c.keyJustPressed("l")) {
+                this.interactiveElements.push(new Label("Hello...", 0, 0, {fontsize: 1}));
+            } else if (c.keyJustPressed("s")) {
+                this.interactiveElements.push(new Sprite("edit.png", 0, 0));
+            } else if (c.keyJustPressed("KeyC")) {
+                this.dumpCopy(c);
             }
         }
     }
 
     dumpCopy(c: Context) {
         if (c.keyIsDown(c.SHIFT)) {
-            const data: any[] = this.dump();
-            copyToClipboard(JSON.stringify(data)).then(() => console.log('Copied to clipboard')).catch((reason: any) => console.error('Failed to copy', reason));
+            const sourceCode = this.dumpSourceCode();
+            copyToClipboard(sourceCode).then(() => console.log('Copied source to clipboard')).catch((reason: any) => console.error('Failed to copy', reason));
         } else {
-
+            const data: any[] = this.dump();
+            copyToClipboard(JSON.stringify(data)).then(() => console.log('Copied json to clipboard')).catch((reason: any) => console.error('Failed to copy', reason));
         }
     }
 
@@ -50,83 +72,41 @@ export class EditScene extends Scene {
         return this.interactiveElements.map(elem => elem.dump());
     }
 
+    dumpSourceCode(): string {
+        return this.interactiveElements.map(elem => elem.getSourceCode()).join('\n');
+    }
+
     handleSelectedElement(c: Context) {
         // handle clicks
-        this.selectElement(c);
+        this.updateSelection(c);
 
-        if (this.selectedElement === null) {
-            return;
+        // handle remove
+        if (this.mode === "normal" && c.keyJustPressed("d")) {
+            this.interactiveElements = this.interactiveElements.filter(elem => !this.selectedElements.includes(elem));
+            this.selectedElements = [];
         }
 
-        if (this.mode === "normal") {
-            if (c.keyJustPressed("d")) {
-                this.interactiveElements = this.interactiveElements.filter(elem => elem !== this.selectedElement);
-                this.selectedElement = null;
-            }
-            if (this.selectedElement instanceof Label || this.selectedElement instanceof Sprite) {
-                this.handleElementMovement(this.selectedElement, c);
-            }
-        } else {
-            if (c.keyJustPressed("Escape")) {
-                this.mode = "normal";
-                return;
-            }
-
-            if (this.selectedElement instanceof Label) {
-                for (const evt of c.events) {
-                    if (evt.kind === 'keytyped') {
-                        this.selectedElement.text += evt.key;
-                    } else if (evt.kind === 'keydown') {
-                        if (evt.key === "Backspace") {
-                            this.selectedElement.text = this.selectedElement.text.slice(0, -1);
-                        } else if (evt.key === "Delete") {
-                            this.selectedElement.text = '';
-                        }
-                    }
-                }
-            }
-        }
+        for (const selectedElement of this.selectedElements)
+            selectedElement.handleEdit(c, this.mode);
     }
 
-    private selectElement(c: Context) {
+    private updateSelection(c: Context) {
         for (const evt of c.events) {
             if (evt.kind === 'mousedown') {
-                this.selectedElement = null;
-                for (const elem of this.interactiveElements) {
-                    if (elem instanceof Label || elem instanceof Sprite) {
-                        if (elem.touches(c)) {
-                            this.selectedElement = elem;
-                        }
-                    }
-                }
+                this.selectedElements = this.interactiveElements.filter((elem) => elem.touches());
+                break;
             }
-        }
-    }
-
-    handleElementMovement(element: Label | Sprite, c: Context) {
-        let distance = 0.1;
-        if (c.keyIsDown(c.SHIFT)) {
-            distance = 1;
-        }
-        if (c.keyJustPressed(c.LEFT_ARROW)) {
-            element.x -= distance;
-        } else if (c.keyJustPressed(c.RIGHT_ARROW)) {
-            element.x += distance;
-        } else if (c.keyJustPressed(c.UP_ARROW)) {
-            element.y += distance;
-        } else if (c.keyJustPressed(c.DOWN_ARROW)) {
-            element.y -= distance;
         }
     }
 
     private handleMode(c: Context) {
-        if (this.selectedElement === null) {
+        if (this.selectedElements.length === 0) {
             this.mode = "normal";
             return;
         }
 
         if (this.mode === "normal") {
-            if (c.keyJustPressed("e")) {
+            if (c.keyJustPressed("i")) {
                 this.mode = "edit";
                 return;
             }
@@ -135,7 +115,6 @@ export class EditScene extends Scene {
                 this.mode = "normal";
             }
         }
-
     }
 }
 

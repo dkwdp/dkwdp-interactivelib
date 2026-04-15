@@ -281,4 +281,42 @@ export class Context {
     keyIsDown(key: string): boolean {
         return this.p.keyIsDown(key);
     }
+
+    mouseMovement(): MouseMovement {
+        let x: number = 0;
+        let y: number = 0;
+        let dragging: boolean = false;
+        let didMove: boolean = false;
+
+        for (const evt of this.events) {
+            if (evt.kind === "mousemove") {
+                x += evt.dx;
+                y += evt.dy;
+                dragging = evt.dragging;
+                didMove = true;
+            }
+        }
+        return new MouseMovement(x, y, dragging, didMove);
+    }
+}
+
+export class MouseMovement {
+    x: number;
+    y: number;
+    dragging: boolean;
+    didMove: boolean;
+
+    constructor(x: number, y: number, dragging: boolean, didMove: boolean) {
+        this.x = x;
+        this.y = y;
+        this.dragging = dragging;
+        this.didMove = didMove;
+    }
+}
+
+export class ContextNotProvidedError extends Error {
+    constructor(message?: string) {
+        if (message === undefined) message = "Context not provided. Call update(context) first.";
+        super(message);
+    }
 }

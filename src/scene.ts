@@ -1,5 +1,5 @@
 import {Context} from "./context";
-import {INTERACTIVE_ELEMENT_MARKER, InteractiveElement} from "./elements/element";
+import {InteractiveElement} from "./elements/interactive-element";
 
 export abstract class Scene {
     protected autoDrawMembers: InteractiveElement[] | null = null;
@@ -15,7 +15,7 @@ export abstract class Scene {
         const autoDrawMembers: InteractiveElement[] = [];
         Object.keys(this).forEach(memberName => {
             const member = (this as any)[memberName];
-            if (member && member._interactiveElementMarker === INTERACTIVE_ELEMENT_MARKER) {
+            if (member && member._interactiveElementMarker === "interactiveElement") {
                 const ignoredElements = (this.constructor as any).ignoredElements || new Set<string>();
                 if (!ignoredElements.has(memberName)) {
                     autoDrawMembers.push(member);
@@ -33,16 +33,16 @@ export abstract class Scene {
                 member.update(context);
     }
 
-    autoDrawDraw(context: Context) {
+    autoDrawDraw() {
         for (const member of this.autoDrawMembers!)
             if (member.visible)
-                member.draw(context);
+                member.draw();
     }
 
     call(context: Context) {
         this.autoDrawHandleEvents(context);
         this.update(context);
-        this.autoDrawDraw(context);
+        this.autoDrawDraw();
     }
 
     /**
