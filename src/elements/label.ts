@@ -1,5 +1,5 @@
 import {Context} from "../context";
-import {InteractiveElement} from "./interactive-element";
+import {InteractiveElement, InteractiveElementDump} from "./interactive-element";
 import {Rect} from "../element-helpers/rect";
 import {TextTools, HorizAlign, VertAlign} from "../element-helpers/text-tools";
 
@@ -20,7 +20,7 @@ export class Label extends InteractiveElement {
     color: [number, number, number];
 
     /**
-     * Image rendering mode. Default is "left".
+     * Image rendering mode. The default is "left".
      * left: draws the label left aligned
      * center: draws the label center aligned
      * radius: draws the label right aligned
@@ -28,7 +28,7 @@ export class Label extends InteractiveElement {
     horizAlign: HorizAlign = "left";
 
     /**
-     * Image rendering mode. Default is "top".
+     * Image rendering mode. The default is "top".
      * top: draws the label top aligned
      * center: draws the label center aligned
      * bottom: draws the label bottom aligned
@@ -46,8 +46,8 @@ export class Label extends InteractiveElement {
      */
     alpha: number;
 
-    constructor(text: string, x: number, y: number, {fontsize = 3, horizAlign = "left", vertAlign = "top", rotation = 0, alpha = 0, color = [0, 0, 0]}: LabelParams = {}) {
-        super(x, y);
+    constructor(identifier: string, text: string, x: number, y: number, {fontsize = 3, horizAlign = "left", vertAlign = "top", rotation = 0, alpha = 0, color = [0, 0, 0]}: LabelParams = {}) {
+        super(identifier, x, y);
         this.text = text;
         this.fontsize = fontsize;
         this.horizAlign = horizAlign;
@@ -107,8 +107,10 @@ export class Label extends InteractiveElement {
         c.pop();
     }
 
-    dump(): any {
+    dump(): InteractiveElementDump {
         return {
+            identifier: this._identifier,
+            kind: "label",
             visible: this.visible,
             text: this.text,
             x: this.x,
@@ -123,7 +125,7 @@ export class Label extends InteractiveElement {
     }
 
     getSourceCode(): string {
-        return `labelName: Label = new Label("${this.text}", ${this.x.toFixed(2)}, ${this.y.toFixed(2)}, {fontsize: ${this.fontsize}, horizAlign: "${this.horizAlign}", vertAlign: "${this.vertAlign}", rotation: ${this.rotation}, alpha: ${this.alpha}, color: [${this.color[0]}, ${this.color[1]}, ${this.color[2]}]});`;
+        return `labelName: Label = new Label("${this.identifier}", "${this.text}", ${this.x.toFixed(2)}, ${this.y.toFixed(2)}, {fontsize: ${this.fontsize}, horizAlign: "${this.horizAlign}", vertAlign: "${this.vertAlign}", rotation: ${this.rotation}, alpha: ${this.alpha}, color: [${this.color[0]}, ${this.color[1]}, ${this.color[2]}]});`;
     }
 
     load(data: any): void {

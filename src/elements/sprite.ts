@@ -40,8 +40,8 @@ export class Sprite extends InteractiveElement {
      */
     imageMode: ImageMode;
 
-    constructor(filename: string, x: number, y: number, {size = 3.0, rotation = 0, alpha = 1.0, imageMode = "center"}: SpriteParams = {}) {
-        super(x, y);
+    constructor(identifier: string, filename: string, x: number, y: number, {size = 3.0, rotation = 0, alpha = 1.0, imageMode = "center"}: SpriteParams = {}) {
+        super(identifier, x, y);
         this.filename = filename;
         this.size = size;
         this.rotation = rotation;
@@ -171,11 +171,13 @@ export class Sprite extends InteractiveElement {
     }
 
     getSourceCode(): string {
-        return `spriteName: Sprite = new Sprite("${this.filename}", ${this.x.toFixed(2)}, ${this.y.toFixed(2)}, {size: ${this.size}, imageMode: "${this.imageMode}", rotation: ${this.rotation.toFixed(2)}, alpha: ${this.alpha}});`;
+        return `spriteName: Sprite = new Sprite("${this.identifier}", "${this.filename}", ${this.x.toFixed(2)}, ${this.y.toFixed(2)}, {size: ${this.size}, imageMode: "${this.imageMode}", rotation: ${this.rotation.toFixed(2)}, alpha: ${this.alpha}});`;
     }
 
     dump(): any {
         return {
+            identifier: this._identifier,
+            kind: "sprite",
             visible: this.visible,
             filename: this.filename,
             x: this.x,

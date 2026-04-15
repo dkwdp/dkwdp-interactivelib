@@ -13,6 +13,11 @@ export abstract class InteractiveElement {
     protected _context: Context | null = null;
 
     /**
+     * An unique identifier for the element.
+     */
+    protected _identifier: string;
+
+    /**
      * Indicates whether the element is visible.
      * Neither the draw()-method nor the update()-method will be called, if the element is not visible.
      */
@@ -34,14 +39,20 @@ export abstract class InteractiveElement {
     /**
      * Constructs a new instance of the class with specified x and y coordinates.
      *
+     * @param identifier - The unique identifier for the element.
      * @param x - The x-coordinate value.
      * @param y - The y-coordinate value.
      * @return A new instance of the class.
      */
-    constructor(x: number, y: number) {
+    protected constructor(identifier: string, x: number, y: number) {
+        this._identifier = identifier;
         this.x = x;
         this.y = y;
         this.visible = true;
+    }
+
+    get identifier(): string {
+        return this._identifier;
     }
 
     /**
@@ -144,9 +155,9 @@ export abstract class InteractiveElement {
      * The result only contains properties, that are important to reproduce the object.
      * It doesn't include volatile properties.
      *
-     * @returns An object containing the element's properties.'
+     * @returns An object containing the element's properties.
      */
-    abstract dump(): any;
+    abstract dump(): InteractiveElementDump;
 
     /**
      * Returns the source code that would create this element.
@@ -156,5 +167,11 @@ export abstract class InteractiveElement {
     /**
      * Loads properties from a JSON-serializable object. The data object can be created using the dump() method.
      */
-    abstract load(data: any): void;
+    abstract load(data: InteractiveElementDump): void;
+}
+
+export interface InteractiveElementDump {
+    kind: string;
+    identifier: string;
+    [key: string]: any;
 }

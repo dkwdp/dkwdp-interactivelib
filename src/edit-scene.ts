@@ -26,7 +26,7 @@ export class EditScene extends Scene {
         c.background(230);
 
         if (this.interactiveElements.length === 0) {
-            const label = new Label("No elements", 0, 0, {vertAlign: "center", horizAlign: "center", fontsize: 2});
+            const label = new Label("", "No elements", 0, 0, {vertAlign: "center", horizAlign: "center", fontsize: 2});
             label.update(c);
             label.draw();
         }
@@ -49,9 +49,9 @@ export class EditScene extends Scene {
     private addElements(c: Context) {
         if (this.mode === "normal") {
             if (c.keyJustPressed("l")) {
-                this.interactiveElements.push(new Label("Hello...", 0, 0, {fontsize: 1}));
+                this.interactiveElements.push(new Label(this.getNextElementName("Label"), "Hello...", 0, 0, {fontsize: 1}));
             } else if (c.keyJustPressed("s")) {
-                this.interactiveElements.push(new Sprite("edit.png", 0, 0));
+                this.interactiveElements.push(new Sprite(this.getNextElementName("Sprite"), "edit.png", 0, 0));
             } else if (c.keyJustPressed("KeyC")) {
                 this.dumpCopy(c);
             }
@@ -114,6 +114,16 @@ export class EditScene extends Scene {
             if (c.keyJustPressed("Escape")) {
                 this.mode = "normal";
             }
+        }
+    }
+
+    private getNextElementName(kind: string): string {
+        const used = new Set(this.interactiveElements.map(e => e.identifier));
+        let i = 1;
+        while (true) {
+            const name = `${kind}${String(i).padStart(2, '0')}`;
+            if (!used.has(name)) return name;
+            i++;
         }
     }
 }
