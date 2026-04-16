@@ -1,6 +1,6 @@
 import {Scene} from "./scene";
 import {Context} from "./context";
-import {InteractiveElement} from "./elements/interactive-element";
+import {InteractiveElement, InteractiveElementDump} from "./elements/interactive-element";
 import {Label} from "./elements/label";
 import {Sprite} from "./elements/sprite";
 
@@ -64,6 +64,8 @@ export class EditScene extends Scene {
                 this.interactiveElements.push(new Sprite(this.getNextElementName("Sprite"), "edit.png", 0, 0));
             } else if (c.keyJustPressed("KeyC")) {
                 this.dumpCopy(c);
+            } else if (c.keyJustPressed("KeyV")) {
+                this.loadClipboard();
             }
         }
     }
@@ -73,17 +75,51 @@ export class EditScene extends Scene {
             const sourceCode = this.dumpSourceCode();
             copyToClipboard(sourceCode).then(() => console.log('Copied source to clipboard')).catch((reason: any) => console.error('Failed to copy', reason));
         } else {
-            const data: any[] = this.dump();
+            const data: InteractiveElementDump[] = this.dump();
             copyToClipboard(JSON.stringify(data)).then(() => console.log('Copied json to clipboard')).catch((reason: any) => console.error('Failed to copy', reason));
         }
     }
 
-    dump(): any[] {
+    dump(): InteractiveElementDump[] {
         return this.interactiveElements.map(elem => elem.dump());
     }
 
     dumpSourceCode(): string {
         return this.interactiveElements.map(elem => elem.getSourceCode()).join('\n');
+    }
+
+    load(data: string) {
+        const d = JSON.parse(data);
+        if (!Array.isArray(d)) {
+            throw new Error('Invalid data format, expected array');
+        }
+        if (d.length >= 0) {
+            if (typeof d[0].kind !== 'string') {
+                throw new Error('Invalid data format, expected array of InteractiveElementDump');
+            }
+            const elemDump: InteractiveElementDump[] = d;
+            this.interactiveElements = [];
+            for (const elem of elemDump) {
+                switch (elem.kind) {
+                    case 'sprite':
+                        this.interactiveElements.push(Sprite.fromDump(elem));
+                        break;
+                    case 'label':
+                        this.interactiveElements.push(Label.fromDump(elem));
+                        break;
+                    default:
+                        throw new Error(`Unknown element kind: ${elem.kind}`);
+                }
+            }
+        }
+    }
+
+    loadClipboard() {
+        const data = readFromClipboard().then((data) => {
+            if (data) {
+                this.load(data);
+            }
+        }).catch((reason: any) => console.error('Failed to read clipboard', reason));
     }
 
     handleSelectedElement(c: Context) {
@@ -143,5 +179,13 @@ async function copyToClipboard(text: string): Promise<void> {
         await navigator.clipboard.writeText(text);
     } catch (err) {
         console.error('Failed to copy: ', err);
+    }
+}
+
+async function readFromClipboard(): Promise<string | void> {
+    try {
+        return await navigator.clipboard.readText();
+    } catch (err) {
+        console.error('Failed to read clipboard: ', err);
     }
 }

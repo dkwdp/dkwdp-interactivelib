@@ -1,6 +1,6 @@
 import {Context, ContextNotProvidedError} from "../context";
 import p5 from "p5";
-import {InteractiveElement} from "./interactive-element";
+import {InteractiveElement, InteractiveElementDump} from "./interactive-element";
 import {Rect} from "../element-helpers/rect";
 
 /**
@@ -196,5 +196,11 @@ export class Sprite extends InteractiveElement {
         this.rotation = data.rotation;
         this.alpha = data.alpha;
         this.imageMode = data.imageMode;
+    }
+
+    static fromDump(d: InteractiveElementDump): Sprite {
+        const sprite = new Sprite(d.identifier, d.filename, d.x, d.y);
+        sprite.load(d);
+        return sprite;
     }
 }

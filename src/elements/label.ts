@@ -140,4 +140,10 @@ export class Label extends InteractiveElement {
         this.rotation = data.rotation;
         this.alpha = data.alpha;
     }
+
+    static fromDump(d: InteractiveElementDump): Label {
+        const label = new Label(d.identifier, d.text, d.x, d.y);
+        label.load(d);
+        return label;
+    }
 }
