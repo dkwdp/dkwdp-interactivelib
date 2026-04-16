@@ -171,7 +171,7 @@ export class Sprite extends InteractiveElement {
     }
 
     getSourceCode(): string {
-        return `${this.getSourceCodeIdentifier()}: Sprite = new Sprite("${this.identifier}", "${this.filename}", ${this.x.toFixed(2)}, ${this.y.toFixed(2)}, {size: ${this.size}, imageMode: "${this.imageMode}", rotation: ${this.rotation.toFixed(2)}, alpha: ${this.alpha}});`;
+        return `${this.getSourceCodeIdentifier()}: Sprite = new Sprite("${this.identifier}", "${this.filename}", ${this.x.toFixed(1)}, ${this.y.toFixed(1)}, {size: ${toFixedSpriteSize(this.size)}, imageMode: "${this.imageMode}", rotation: ${this.rotation.toFixed(1)}, alpha: ${this.alpha}});`;
     }
 
     dump(): any {
@@ -180,6 +180,7 @@ export class Sprite extends InteractiveElement {
             kind: "sprite",
             visible: this.visible,
             filename: this.filename,
+            size: this.size,
             x: this.x,
             y: this.y,
             rotation: this.rotation,
@@ -191,6 +192,7 @@ export class Sprite extends InteractiveElement {
     load(data: any): void {
         this.visible = data.visible;
         this.filename = data.filename;
+        this.size = data.size;
         this.x = data.x;
         this.y = data.y;
         this.rotation = data.rotation;
@@ -202,5 +204,13 @@ export class Sprite extends InteractiveElement {
         const sprite = new Sprite(d.identifier, d.filename, d.x, d.y);
         sprite.load(d);
         return sprite;
+    }
+}
+
+function toFixedSpriteSize(spriteSize: SpriteSize): string {
+    if (Array.isArray(spriteSize)) {
+        return `[${spriteSize[0].toFixed(1)}, ${spriteSize[1].toFixed(1)}]`;
+    } else {
+        return spriteSize.toFixed(1);
     }
 }
