@@ -51,6 +51,13 @@ export abstract class InteractiveElement {
         this.visible = true;
     }
 
+    /**
+     * Initializes the module with the provided context.
+     *
+     * @param _context - The context object used for initialization.
+     */
+    init(_context: Context): void {}
+
     get identifier(): string {
         return this._identifier;
     }
