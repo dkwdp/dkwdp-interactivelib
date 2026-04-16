@@ -52,6 +52,8 @@ export abstract class AutoDrawScene extends Scene {
         context.background(this.backgroundColor);
         this.autoDrawDraw();
     }
+
+    update(_c: Context): void {}
 }
 
 /**

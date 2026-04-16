@@ -1,6 +1,6 @@
 export type EventKind = 'keydown' | 'keyup' | 'keytyped' | 'mousedown' | 'mouseup' | 'click' | 'mousemove' | 'mousewheel';
 
-export interface BaseEvent {
+interface BaseEvent {
     kind: EventKind;
     timestamp: number;
 }
