@@ -59,7 +59,7 @@ export class EditScene extends Scene {
     private addElements(c: Context) {
         if (this.mode === "normal") {
             if (c.keyJustPressed("l")) {
-                this.interactiveElements.push(new Label(this.getNextElementName("Label"), "Hello...", 0, 0, {fontsize: 1}));
+                this.interactiveElements.push(new Label(this.getNextElementName("Label"), "Label", 0, 0, {fontsize: 1, horizAlign: "center", vertAlign: "center"}));
             } else if (c.keyJustPressed("s")) {
                 this.interactiveElements.push(new Sprite(this.getNextElementName("Sprite"), "edit.png", 0, 0));
             } else if (c.keyJustPressed("KeyC")) {

@@ -75,6 +75,9 @@ export class Label extends InteractiveElement {
             if (c.keyJustPressed("-")) {
                 this.fontsize *= 1 / 1.2;
             }
+            if (c.keyJustPressed("a")) {
+                this.horizAlign = this.horizAlign === "left" ? "center" : "left";
+            }
         } else if (mode === "edit") {
             for (const evt of c.events) {
                 if (evt.kind === 'keytyped') {
