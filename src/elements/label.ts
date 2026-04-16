@@ -125,7 +125,7 @@ export class Label extends InteractiveElement {
     }
 
     getSourceCode(): string {
-        return `labelName: Label = new Label("${this.identifier}", "${this.text}", ${this.x.toFixed(2)}, ${this.y.toFixed(2)}, {fontsize: ${this.fontsize}, horizAlign: "${this.horizAlign}", vertAlign: "${this.vertAlign}", rotation: ${this.rotation}, alpha: ${this.alpha}, color: [${this.color[0]}, ${this.color[1]}, ${this.color[2]}]});`;
+        return `${this.getSourceCodeIdentifier()}: Label = new Label("${this.identifier}", "${this.text}", ${this.x.toFixed(2)}, ${this.y.toFixed(2)}, {fontsize: ${this.fontsize}, horizAlign: "${this.horizAlign}", vertAlign: "${this.vertAlign}", rotation: ${this.rotation}, alpha: ${this.alpha}, color: [${this.color[0]}, ${this.color[1]}, ${this.color[2]}]});`;
     }
 
     load(data: any): void {

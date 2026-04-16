@@ -165,6 +165,23 @@ export abstract class InteractiveElement {
     abstract getSourceCode(): string;
 
     /**
+     * Formats the identifier into a camelCase string.
+     */
+    getSourceCodeIdentifier(): string {
+        // Matches alphanumeric sequences, effectively ignoring all whitespace and symbols
+        const words = this.identifier.match(/[a-z0-9]+/gi) || [];
+
+        return words
+            .map((word, index) => {
+                const lower = word.toLowerCase();
+                return index === 0
+                    ? lower
+                    : lower.charAt(0).toUpperCase() + lower.slice(1);
+            })
+            .join('');
+    }
+
+    /**
      * Loads properties from a JSON-serializable object. The data object can be created using the dump() method.
      */
     abstract load(data: InteractiveElementDump): void;
