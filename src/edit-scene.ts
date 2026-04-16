@@ -5,13 +5,23 @@ import {Label} from "./elements/label";
 import {Sprite} from "./elements/sprite";
 
 export class EditScene extends Scene {
+    backScene?: string;
+
     interactiveElements: InteractiveElement[] = [];
     selectedElements: InteractiveElement[] = [];
 
     mode: "normal" | "edit" = "normal";
 
+    constructor(backScene?: string) {
+        super();
+        this.backScene = backScene;
+    }
+
     update(c: Context): void {
         this.addElements(c);
+
+        if (this.backScene && c.keyJustPressed("KeyQ"))
+            c.nextScene = this.backScene;
 
         for (const elem of this.interactiveElements) elem.update(c);
 
