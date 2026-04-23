@@ -2,12 +2,12 @@ import {Scene} from "../scene";
 import {InteractiveElement} from "../elements/interactive-element";
 import {Context} from "../context";
 
-export abstract class AutoDrawScene extends Scene {
+export class AutoDrawScene extends Scene {
     protected autoDrawMembers: InteractiveElement[] | null = null;
 
     backgroundColor: number;
 
-    protected constructor(backgroundColor: number = 235) {
+    constructor(backgroundColor: number = 235) {
         super();
         this.backgroundColor = backgroundColor;
     }

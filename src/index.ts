@@ -7,6 +7,7 @@ export * from "./scene";
 export * from "./elements/interactive-element";
 export * from "./elements/sprite";
 export * from "./elements/label";
+export * from "./elements/multi-label";
 export * from "./context";
 export * from "./edit-scene";
 export * from "./elements/effects";
