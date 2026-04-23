@@ -1,4 +1,4 @@
-import {Context, ContextNotProvidedError} from "../context";
+import {Context} from "../context";
 import p5 from "p5";
 import {InteractiveElement, InteractiveElementDump} from "./interactive-element";
 import {Rect} from "../element-helpers/rect";
@@ -54,10 +54,10 @@ export class Sprite extends InteractiveElement {
     }
 
     touches(x?: number, y?: number): boolean {
-        if (this._context === null) throw new ContextNotProvidedError();
+        const c = this.getContext();
 
-        if (x === undefined) x = this._context.mousePos.x;
-        if (y === undefined) y = this._context.mousePos.y;
+        if (x === undefined) x = c.mousePos.x;
+        if (y === undefined) y = c.mousePos.y;
 
         // Transform click point to sprite's local coordinate system (inverse rotation)
         const dx = x - this.x;
@@ -86,7 +86,7 @@ export class Sprite extends InteractiveElement {
             const pixelColor = image.get(pixelX, pixelY);
 
             // Check alpha channel (index 3 in RGBA array)
-            const alpha = this._context.alpha(pixelColor);
+            const alpha = c.alpha(pixelColor);
 
             // Return true if pixel is not transparent (alpha > threshold)
             return alpha > 128;
@@ -128,24 +128,24 @@ export class Sprite extends InteractiveElement {
     }
 
     draw() {
-        if (this._context === null) throw new ContextNotProvidedError();
+        const c = this.getContext();
 
-        const image = this._context.spriteBuffer.get(this.filename);
+        const image = c.spriteBuffer.get(this.filename);
         if (image) {
-            this._context.push();
+            c.push();
             if (this.alpha < 1.0)
-                this._context.tint(255, this.alpha * 255);
+                c.tint(255, this.alpha * 255);
             // we flip y position here
-            this._context.translate(this.x, this.y);
-            this._context.rotate(this.rotation);
+            c.translate(this.x, this.y);
+            c.rotate(this.rotation);
             let imageMode = this.imageMode;
             if (imageMode === 'radius') {
                 imageMode = 'center';
             }
-            this._context.imageMode(imageMode);
+            c.imageMode(imageMode);
             const [w, h] = this.getImageSize();
-            this._context.image(image, 0, 0, w, h);
-            this._context.pop();
+            c.image(image, 0, 0, w, h);
+            c.pop();
         } else {
             console.error(`Sprite image not found: ${this.filename}`);
         }

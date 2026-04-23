@@ -148,7 +148,8 @@ export abstract class InteractiveElement {
      * Safely gets the context.
      */
     protected getContext(): Context {
-        if (this._context === null) throw new ContextNotProvidedError();
+        if (this._context === null)
+            throw new ContextNotProvidedError(`Failed to get context. ${this.constructor.name} ${this.identifier}`);
         return this._context;
     }
 

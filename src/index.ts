@@ -12,6 +12,7 @@ export * from "./edit-scene";
 export * from "./elements/effects";
 export * from "./scenes/auto-draw-scene";
 export * from "./event";
+export * from "./element-helpers/rect";
 
 export function initScenes(parent: HTMLElement, sceneBuffer: [string, Scene][], audioAssets: string[], imageAssets: string[]) {
     new p5((p) => {

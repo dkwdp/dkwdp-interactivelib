@@ -48,8 +48,8 @@ export abstract class AutoDrawScene extends Scene {
 
     call(context: Context) {
         this.autoDrawHandleEvents(context);
-        this.update(context);
         context.background(this.backgroundColor);
+        this.update(context);
         this.autoDrawDraw();
     }
 
