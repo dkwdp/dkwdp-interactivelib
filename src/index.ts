@@ -15,6 +15,7 @@ export * from "./scenes/auto-draw-scene";
 export * from "./event";
 export * from "./element-helpers/rect";
 export * from "./elements/div";
+export * from "./elements/button";
 
 export function initScenes(
     parent: HTMLElement, sceneBuffer: [string, Scene][], preloadAudioAssets: string[] = [], preloadImageAssets: string[] = []
