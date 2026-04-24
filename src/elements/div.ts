@@ -18,12 +18,21 @@ export class Div extends InteractiveElement {
         this.innerHtml = innerHtml;
     }
 
+    getPixelPosition(c: Context): [number, number] {
+        return c.coordinates.w2s(this.x, -this.y);
+    }
+
+    getPixelSize(c: Context): [number, number] {
+        return c.coordinates.w2sScale(this.width, this.height);
+    }
+
     init(c: Context) {
         if (this.div === null) {
             this.div = c.p.createDiv(this.innerHtml);
-            this.div.position(this.x, this.y, "absolute");
-            this.div.size(this.width, this.height);
+            this.div.position(...this.getPixelPosition(c), "absolute");
+            this.div.size(...this.getPixelSize(c));
             this.div.style("z-index", "1");
+            this.div.style("background-color", "rgba(0, 255, 0, 0.5)");
         }
         c.canvasContainer.child(this.div);
     }
@@ -33,7 +42,13 @@ export class Div extends InteractiveElement {
             this.div.remove();
     }
 
-    draw(): void {}
+    draw(): void {
+        if (this.div !== null) {
+            const c = this.getContext();
+            this.div.position(...this.getPixelPosition(c), "absolute");
+            this.div.size(...this.getPixelSize(c));
+        }
+    }
 
     getBoundingBox(): Rect {
         return Rect.fromMode(this.x, this.y, this.width, this.height, "corners");

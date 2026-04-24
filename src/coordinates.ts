@@ -68,11 +68,8 @@ export class CoordinateSystem {
      * @private
      */
     private calcInverse(x: number, ySheer: number = 0, xSheer: number = 0, y: number = 1, xTranslate: number = 0, yTranslate: number = 0): number[] {
-        const det = 1.0 / (x * y - ySheer * xSheer);
-        const r = [y * det, -ySheer * det, -xSheer * det, x * det];
-        const xt = r[0] * xTranslate + r[2] * yTranslate;
-        const yt = r[1] * xTranslate + r[3] * yTranslate;
-        return [r[0], r[1], r[2], r[3], xt, yt];
+        const invDet = 1.0 / (x * y - ySheer * xSheer);
+        return [y * invDet, -ySheer * invDet, -xSheer * invDet, x * invDet, (xSheer * yTranslate - y * xTranslate) * invDet, (ySheer * xTranslate - x * yTranslate) * invDet];
     }
 
     /**
