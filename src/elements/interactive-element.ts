@@ -25,6 +25,13 @@ export abstract class Updatable {
      */
     init(_context: Context): void {}
 
+    /**
+     * Called, when the scene is dropped.
+     *
+     * @param c The context object
+     */
+    drop(c: Context): void {}
+
     get identifier(): string {
         return this._identifier;
     }

@@ -10,6 +10,8 @@ export class Context {
     readonly spriteBuffer: SpriteBuffer;
     readonly events: Evt[];
     readonly coordinates: CoordinateSystem;
+    readonly canvas: p5.Element;
+    readonly canvasContainer: p5.Element;
 
     // noinspection JSMismatchedCollectionQueryUpdate
     private readonly audioPlayers: AudioPlayer[];
@@ -34,7 +36,11 @@ export class Context {
     readonly DOWN_ARROW: string = "ArrowDown";
     readonly UP_ARROW: string = "ArrowUp";
 
-    constructor(time: number, globalTime: number, p: p5, spriteBuffer: SpriteBuffer, audioPlayers: AudioPlayer[], audioBuffer: AudioBuf, events: Evt[], coordinates: CoordinateSystem) {
+    constructor(
+        time: number, globalTime: number, p: p5, spriteBuffer: SpriteBuffer, audioPlayers: AudioPlayer[],
+        audioBuffer: AudioBuf, events: Evt[], coordinates: CoordinateSystem, canvas: p5.Element,
+        canvasContainer: p5.Element
+    ) {
         this.time = time;
         this.globalTime = globalTime;
         this.p = p;
@@ -45,6 +51,8 @@ export class Context {
         this.coordinates = coordinates;
         this._audios = [];
         this.nextScene = null;
+        this.canvas = canvas;
+        this.canvasContainer = canvasContainer;
     }
 
     /**

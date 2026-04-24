@@ -19,6 +19,8 @@ export class ScenePlayer {
     private loaded: boolean = false;
     private initialized: boolean = false;
     private currentScene: Scene | null = null;
+    private readonly canvas: p5.Element;
+    private readonly canvasContainer: p5.Element;
 
     /* The timepoint when the currentAnimationScene was started in the time system of the audioCtx */
     private currentSceneStartTime: number = 0;
@@ -33,10 +35,12 @@ export class ScenePlayer {
     private lastMouseX: number = NaN;
     private lastMouseY: number = NaN;
 
-    constructor(p: p5, sceneBuffer: Map<string, Scene>, startScene: string) {
+    constructor(p: p5, sceneBuffer: Map<string, Scene>, startScene: string, canvas: p5.Element, canvasContainer: p5.Element) {
         this.p = p;
         this.sceneBuffer = sceneBuffer;
         this.startScene = startScene;
+        this.canvas = canvas;
+        this.canvasContainer = canvasContainer;
         this.audioCtx = new window.AudioContext();
         this.audioBuffer = new AudioBuf(this.audioCtx);
         this.spriteBuffer = new SpriteBuffer(p);
@@ -105,13 +109,17 @@ export class ScenePlayer {
     createContext(): Context {
         const globalTime = this.audioCtx.currentTime;
         const currentSceneTime = this.currentTime(globalTime);
-        return new Context(currentSceneTime, globalTime, this.p, this.spriteBuffer, this.detachedAudioPlayers, this.audioBuffer, this.events, this.coordinateSystem);
+        return new Context(
+            currentSceneTime, globalTime, this.p, this.spriteBuffer, this.detachedAudioPlayers, this.audioBuffer,
+            this.events, this.coordinateSystem, this.canvas, this.canvasContainer
+        );
     }
 
     setScene(scene: Scene) {
-        if (!scene) throw new Error(`Scene is ${scene} but should be a Scene`);
-        this.currentScene = scene;
         const context = this.createContext();
+        if (this.currentScene)
+            this.currentScene.drop(context);
+        this.currentScene = scene;
         this.currentSceneStartTime = context.globalTime;
         this.currentScene.init(context);
     }
@@ -170,9 +178,11 @@ export class ScenePlayer {
         this.resetAudio();
 
         const scene = this.sceneBuffer.get(nextScene);
-        if (!scene) throw new Error(`Unable to find scene "${nextScene}"`);
-
-        this.setScene(scene);
+        if (scene) {
+            this.setScene(scene);
+        } else {
+            console.error(`Unable to find scene "${nextScene}"`);
+        }
     }
 
     handleAudio(audios: Audio[], globalTime: number) {
