@@ -27,14 +27,25 @@ export class Div extends InteractiveElement {
     }
 
     init(c: Context) {
+        this._context = c;
         if (this.div === null) {
             this.div = c.p.createDiv(this.innerHtml);
-            this.div.position(...this.getPixelPosition(c), "absolute");
-            this.div.size(...this.getPixelSize(c));
             this.div.style("z-index", "1");
-            this.div.style("background-color", "rgba(0, 255, 0, 0.5)");
+            this.div.style("transform-origin", "top left");
+            this.updatePosition();
         }
         c.canvasContainer.child(this.div);
+    }
+
+    updatePosition() {
+        if (this.div !== null) {
+            const c = this.getContext();
+            this.div.position(...this.getPixelPosition(c), "absolute");
+            const scaleFactor = c.p.width / 1920;
+            const pixelSize = this.getPixelSize(c);
+            this.div.size(pixelSize[0] / scaleFactor, pixelSize[1] / scaleFactor);
+            this.div.style("transform", `scale(${scaleFactor.toFixed(2)})`);
+        }
     }
 
     drop(c: Context) {
@@ -43,11 +54,7 @@ export class Div extends InteractiveElement {
     }
 
     draw(): void {
-        if (this.div !== null) {
-            const c = this.getContext();
-            this.div.position(...this.getPixelPosition(c), "absolute");
-            this.div.size(...this.getPixelSize(c));
-        }
+        this.updatePosition();
     }
 
     getBoundingBox(): Rect {
