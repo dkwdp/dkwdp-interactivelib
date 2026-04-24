@@ -25,7 +25,6 @@ export class AutoDrawScene extends Scene {
 
     drop(c: Context): void {
         this.autoUpdatables!.forEach((elem) => elem.drop(c))
-        console.log("Dropped AutoDrawScene");
     }
 
     autoDrawUpdate(context: Context) {

@@ -31,7 +31,6 @@ export class Div extends InteractiveElement {
     drop(c: Context) {
         if (this.div !== null)
             this.div.remove();
-        console.log("Dropped div");
     }
 
     draw(): void {}
