@@ -147,35 +147,63 @@ interface FailedState extends LoadState {
 type AudioLoadState = SuccessState<AudioFile> | LoadingState | FailedState;
 
 export class AudioBuf {
-    private audios: Map<string, AudioFile>;
+    private readonly audioCtx: AudioContext;
+    private readonly audios: Map<string, AudioLoadState>;
+    private readonly loadTimeout: number;
 
-    constructor() {
+    constructor(audioCtx: AudioContext, loadTimeout: number = 5000) {
+        this.audioCtx = audioCtx;
         this.audios = new Map();
+        this.loadTimeout = loadTimeout;
     }
 
-    /**
-     * Loads the given audios.
-     * @param audios An array of audios, given as tuple [name, filename]. The name is a unique identifier for the audio.
-     * @param audioCtx The AudioContext to use for playback.
-     * The filename is the path to the audio file.
-     */
-    async load(audios: string[], audioCtx: AudioContext) {
-        for (const filename of audios) {
-            const audio = new AudioFile(filename, audioCtx);
-            await audio.load();
-            this.audios.set(filename, audio);
+    async load(filenames: string[]) {
+        await Promise.all(filenames.map(filename => this.loadAudio(filename)));
+    }
+
+    async loadAudio(filename: string): Promise<AudioLoadState> {
+        const cached = this.audios.get(filename);
+        if (cached) return cached;
+
+        this.audios.set(filename, {kind: 'loading', requestTime: performance.now()});
+        try {
+            const audioFile = new AudioFile(filename, this.audioCtx);
+            await audioFile.load();
+            const result: AudioLoadState = {kind: 'success', media: audioFile};
+            this.audios.set(filename, result);
+            return result;
+        } catch (error) {
+            let reason = 'unknown reason';
+            if (error instanceof Error) reason = error.message;
+            const result: AudioLoadState = {kind: 'failed', reason};
+            this.audios.set(filename, result);
+            return result;
         }
     }
 
     /**
-     * Returns the audio segment with the given name.
-     * @param audio The name of the audio.
-     * @returns The audio
+     * Returns the loaded AudioFile, or null if still loading or failed.
      */
-    get(audio: string): AudioFile {
-        const result = this.audios.get(audio);
-        if (!result)
-            throw new Error(`Audio segment not found: ${audio}`);
+    get(audio: string): AudioFile | null {
+        const result = this.getDetailed(audio);
+        return result.kind === 'success' ? result.media : null;
+    }
+
+    /**
+     * Returns the detailed load state for the given audio. Initiates loading on first access.
+     */
+    getDetailed(audio: string): AudioLoadState {
+        let result = this.audios.get(audio) ?? null;
+        if (result === null) {
+            this.loadAudio(audio).then(() => {});
+            return {kind: 'loading', requestTime: performance.now()};
+        }
+
+        if (result.kind === 'loading' && performance.now() - result.requestTime > this.loadTimeout) {
+            result = {kind: 'failed', reason: 'timeout'};
+            this.audios.set(audio, result);
+        }
+
         return result;
     }
 }

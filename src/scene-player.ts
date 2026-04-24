@@ -37,9 +37,9 @@ export class ScenePlayer {
         this.p = p;
         this.sceneBuffer = sceneBuffer;
         this.startScene = startScene;
-        this.audioBuffer = new AudioBuf();
-        this.spriteBuffer = new SpriteBuffer(p);
         this.audioCtx = new window.AudioContext();
+        this.audioBuffer = new AudioBuf(this.audioCtx);
+        this.spriteBuffer = new SpriteBuffer(p);
         this.controlledAudioPlayers = new Map();
         this.detachedAudioPlayers = [];
         this.coordinateSystem = new CoordinateSystem();
@@ -54,7 +54,7 @@ export class ScenePlayer {
      * @return A promise that resolves when all resources are successfully loaded.
      */
     async load(audios: string[], sprites: string[]) {
-        await this.audioBuffer.load(audios, this.audioCtx);
+        await this.audioBuffer.load(audios);
         await this.spriteBuffer.load(sprites);
         this.loaded = true;
 
@@ -193,7 +193,7 @@ export class ScenePlayer {
             }
             if (newPlayerNeeded) {
                 const source = this.audioBuffer.get(audio.filename)
-                if (audio.isValid(source.duration())) {
+                if (source !== null && audio.isValid(source.duration())) {
                     const player = source.createPlayer();
                     player.play(audio.time, globalTime);
                     this.controlledAudioPlayers.set(audio.filename, player);
