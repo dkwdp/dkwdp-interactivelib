@@ -171,7 +171,7 @@ export class Sprite extends InteractiveElement {
     }
 
     getSourceCode(): string {
-        return `${this.getSourceCodeIdentifier()}: Sprite = new Sprite("${this.identifier}", "${this.filename}", ${this.x.toFixed(1)}, ${this.y.toFixed(1)}, {size: ${toFixedSpriteSize(this.size)}, imageMode: "${this.imageMode}", rotation: ${this.rotation.toFixed(1)}, alpha: ${this.alpha}});`;
+        return `${this.getSourceCodeIdentifier()}: Sprite = new Sprite("${this._identifier}", "${this.filename}", ${this.x.toFixed(1)}, ${this.y.toFixed(1)}, {size: ${toFixedSpriteSize(this.size)}, imageMode: "${this.imageMode}", rotation: ${this.rotation.toFixed(1)}, alpha: ${this.alpha}});`;
     }
 
     dump(): any {

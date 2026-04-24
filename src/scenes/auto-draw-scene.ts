@@ -1,9 +1,15 @@
 import {Scene} from "../scene";
-import {InteractiveElement} from "../elements/interactive-element";
+import {
+    collectInteractiveElements,
+    collectUpdatables,
+    InteractiveElement,
+    Updatable
+} from "../elements/interactive-element";
 import {Context} from "../context";
 
 export class AutoDrawScene extends Scene {
-    protected autoDrawMembers: InteractiveElement[] | null = null;
+    protected autoUpdatables: Updatable[] | null = null;
+    protected autoInteractiveElements: InteractiveElement[] | null = null;
 
     backgroundColor: number;
 
@@ -13,59 +19,35 @@ export class AutoDrawScene extends Scene {
     }
 
     init(context: Context) {
-        if (this.autoDrawMembers === null)
-            this.autoDrawMembers = this.collectAutoDrawMembers();
-        this.autoDrawMembers.forEach((elem) => elem.init(context));
+        this.initializeAutoElements();
+        this.autoUpdatables!.forEach((elem) => elem.init(context));
     }
 
-    collectAutoDrawMembers(): InteractiveElement[] {
-        const autoDrawMembers: InteractiveElement[] = [];
-        Object.keys(this).forEach(memberName => {
-            const member = (this as any)[memberName];
-            if (member && member._interactiveElementMarker === "interactiveElement") {
-                const ignoredElements = (this.constructor as any).ignoredElements || new Set<string>();
-                if (!ignoredElements.has(memberName)) {
-                    autoDrawMembers.push(member);
-                }
-            }
-        })
-        return autoDrawMembers;
+    autoDrawUpdate(context: Context) {
+        this.initializeAutoElements();
+        for (const member of this.autoUpdatables!)
+            member.update(context);
     }
 
-    autoDrawHandleEvents(context: Context) {
-        if (this.autoDrawMembers === null)
-            this.autoDrawMembers = this.collectAutoDrawMembers();
-        for (const member of this.autoDrawMembers)
-            if (member.visible)
-                member.update(context);
+    private initializeAutoElements() {
+        if (this.autoInteractiveElements === null)
+            this.autoInteractiveElements = collectInteractiveElements(this);
+        if (this.autoUpdatables === null)
+            this.autoUpdatables = collectUpdatables(this);
     }
 
     autoDrawDraw() {
-        for (const member of this.autoDrawMembers!)
+        for (const member of this.autoInteractiveElements!)
             if (member.visible)
                 member.draw();
     }
 
     call(context: Context) {
-        this.autoDrawHandleEvents(context);
+        this.autoDrawUpdate(context);
         context.background(this.backgroundColor);
         this.update(context);
         this.autoDrawDraw();
     }
 
     update(_c: Context): void {}
-}
-
-/**
- * Decorator to collect elements that should be ignored for automatic drawing.
- * @param sceneClass The class that contains the elements to be ignored.
- * @param elementKey The key of the element in the class.
- * @constructor
- */
-export function Ignore(sceneClass: any, elementKey: string) {
-    if (!sceneClass.constructor.ignoredElements) {
-        sceneClass.constructor.ignoredElements = new Set<string>();
-    }
-    // Add the property name to the list
-    sceneClass.constructor.ignoredElements.add(elementKey);
 }
