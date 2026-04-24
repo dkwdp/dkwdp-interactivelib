@@ -38,7 +38,7 @@ export class ScenePlayer {
         this.sceneBuffer = sceneBuffer;
         this.startScene = startScene;
         this.audioBuffer = new AudioBuf();
-        this.spriteBuffer = new SpriteBuffer();
+        this.spriteBuffer = new SpriteBuffer(p);
         this.audioCtx = new window.AudioContext();
         this.controlledAudioPlayers = new Map();
         this.detachedAudioPlayers = [];
@@ -55,7 +55,7 @@ export class ScenePlayer {
      */
     async load(audios: string[], sprites: string[]) {
         await this.audioBuffer.load(audios, this.audioCtx);
-        await this.spriteBuffer.load(sprites, this.p);
+        await this.spriteBuffer.load(sprites);
         this.loaded = true;
 
         this.updateCoordinateSystem();

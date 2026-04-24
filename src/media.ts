@@ -121,6 +121,31 @@ export class AudioFile {
     }
 }
 
+type Media = p5.Image | AudioFile;
+
+type LoadKind = 'failed' | 'success' | 'loading';
+
+interface LoadState {
+    kind: LoadKind;
+}
+
+interface SuccessState<T extends Media> extends LoadState {
+    kind: 'success';
+    media: T;
+}
+
+interface LoadingState extends LoadState {
+    kind: 'loading';
+    requestTime: number; // start time in milliseconds by performance.now()
+}
+
+interface FailedState extends LoadState {
+    kind: 'failed';
+    reason: string;
+}
+
+type AudioLoadState = SuccessState<AudioFile> | LoadingState | FailedState;
+
 export class AudioBuf {
     private audios: Map<string, AudioFile>;
 
@@ -155,31 +180,144 @@ export class AudioBuf {
     }
 }
 
-export class SpriteBuffer {
-    private sprites: Map<string, p5.Image>
+type ImageLoadState = SuccessState<p5.Image> | LoadingState | FailedState;
+type ImageLoadedState = SuccessState<p5.Image> | FailedState;
 
-    constructor() {
+/**
+ * Generates a 1:1 "broken file" icon image.
+ * @param p The p5 instance.
+ * @param size The width and height of the resulting image.
+ */
+export function generateBrokenFileIcon(p: p5, size: number): p5.Image {
+    const pg = p.createGraphics(size, size);
+    const pad = size * 0.15;
+    const sw = size * 0.05;
+
+    pg.clear(0, 0, 0, 0);
+    pg.stroke(150);
+    pg.strokeWeight(sw);
+    pg.fill(240);
+
+    // Draw paper shape with dog-ear corner
+    pg.beginShape();
+    pg.vertex(pad, pad);
+    pg.vertex(size - pad - size * 0.2, pad);
+    pg.vertex(size - pad, pad + size * 0.2);
+    pg.vertex(size - pad, size - pad);
+    pg.vertex(pad, size - pad);
+    pg.vertex(pad, pad);
+    pg.endShape();
+
+    // Draw the red cross
+    pg.stroke(200, 40, 40);
+    pg.noFill();
+    pg.beginShape();
+    pg.vertex(size * 0.4, size * 0.4);
+    pg.vertex(size * 0.6, size * 0.6);
+    pg.endShape();
+    pg.beginShape();
+    pg.vertex(size * 0.4, size * 0.6);
+    pg.vertex(size * 0.6, size * 0.4);
+    pg.endShape();
+
+    // Convert to p5.Image
+    const img = pg.get();
+    pg.remove(); // Clean up graphics buffer
+    return img;
+}
+
+
+export class SpriteBuffer {
+    private readonly p: p5;
+    private readonly sprites: Map<string, ImageLoadState>
+    private readonly loadTimeout: number;
+    public readonly brokenFileImage: p5.Image;
+    public readonly unloadedImage: p5.Image;
+
+    constructor(p: p5, defaultImageSize: number = 100, loadTimeout: number = 5000) {
+        this.p = p;
         this.sprites = new Map();
+        this.brokenFileImage = generateBrokenFileIcon(p, defaultImageSize);
+        this.unloadedImage = p.createImage(defaultImageSize, defaultImageSize);
+        this.loadTimeout = loadTimeout;
     }
 
     /**
      * Loads a set of sprite images and stores them in the sprites map.
      *
      * @param sprites - An array of file paths to the sprite images.
-     * @param p - An instance of the p5 library used to load the images.
      * @return A promise that resolves once all images are loaded and stored.
      */
-    async load(sprites: string[], p: p5) {
-        for (const filename of sprites) {
-            const sprite = await p.loadImage(filename);
-            this.sprites.set(filename, sprite);
+    async load(sprites: string[]) {
+        await Promise.all(sprites.map(filename => this.loadImage(filename)));
+    }
+
+    /**
+     * Loads and returns a ImageLoadedState with the requested image.
+     * Should not be called, if the image is already saved.
+     * @param filename The filename to load
+     */
+    async loadImage(filename: string): Promise<ImageLoadState> {
+        // if image is already saved
+        const cached = this.sprites.get(filename);
+        if (cached) return cached;
+
+        this.sprites.set(filename, {kind: 'loading', requestTime: performance.now()});
+        try {
+            const sprite = await this.p.loadImage(filename);
+            const result: ImageLoadedState = {kind: 'success', media: sprite};
+            this.sprites.set(filename, result);
+            return result;
+        } catch (error) {
+            let reason = 'unknown reason';
+            if (error instanceof DOMException) {
+                reason = `Image "${filename}" could not be found.`;
+            }
+            const result: ImageLoadedState = {kind: 'failed', reason};
+            this.sprites.set(filename, result);
+            return result;
         }
     }
 
+    /**
+     * This will return the loaded image, if it is already loaded. A broken image icon, if
+     * the image failed to load, or a fully transparent image if the image is still loading.
+     * @param sprite The requested sprite
+     */
     get(sprite: string): p5.Image {
-        const result = this.sprites.get(sprite) || null;
-        if (!result)
-            throw new Error(`Sprite not found: ${sprite}`);
+        const result = this.getDetailed(sprite);
+        switch (result.kind) {
+            case "success":
+                return result.media;
+            case "failed":
+                return this.brokenFileImage;
+            case "loading":
+                return this.unloadedImage;
+        }
+    }
+
+    /**
+     * Retrieves the detailed loading state of a given sprite.
+     *
+     * @param {string} sprite The name of the sprite to get the detailed state for.
+     * @return {ImageLoadState} The loading state of the specified sprite. If the sprite is not found,
+     *                          it initiates the image loading process and returns a state with kind `loading`.
+     */
+    getDetailed(sprite: string): ImageLoadState {
+        // initiate loading, if first request for this sprite
+        let result = this.sprites.get(sprite) || null;
+        if (result === null) {
+            this.loadImage(sprite).then(() => {});
+            // requestTime is a bit unprecise as loadImage will overwrite it, but it doesn't really matter.
+            return {kind: 'loading', requestTime: performance.now()};
+        }
+
+        // mark as failed, if loaded too long
+        if (result.kind === 'loading' && performance.now() - result.requestTime > this.loadTimeout) {
+            result = {kind: 'failed', reason: 'timeout'};
+            this.sprites.set(sprite, result);
+        }
+
         return result;
     }
 }
